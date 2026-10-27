@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Glow Garden</title>
+<meta name="description" content="Your daily habit garden">
+<meta name="theme-color" content="#fde7f3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Glow Garden">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Patrick+Hand&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fff5fa; --bg-grad: linear-gradient(180deg, #fff5fa 0%, #fdf0ff 100%);
+  --card: #ffffff; --text: #5b2a4e; --muted: #9d4b83; --soft: #b77aa6;
+  --accent: #ec4899; --head: #c2185b; --line: #fbe4f0; --chip: #fbe4f0; --chip2: #f3e8ff;
+  --shadow: 0 6px 22px rgba(236,72,153,.13); --input: #f9f0ff;
+  --hand: 'Patrick Hand', 'Comic Sans MS', cursive; --meme: 'Anton', Impact, 'Arial Black', sans-serif;
+}
+body.dark {
+  --bg: #1c1027; --bg-grad: linear-gradient(180deg, #1c1027 0%, #221231 100%);
+  --card: #2a1a3a; --text: #f8e1f4; --muted: #d8b4fe; --soft: #c9a3d9;
+  --accent: #f472b6; --head: #f9a8d4; --line: #4a2d63; --chip: #3b2352; --chip2: #35204a;
+  --shadow: 0 6px 22px rgba(0,0,0,.35); --input: #241532;
+}
+body.lazy:not(.dark) { --bg-grad: linear-gradient(180deg, #eef2ff 0%, #f5f3ff 60%, #fdf2f8 100%); --head: #7c3aed; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; }
+body { font-family: 'Quicksand', system-ui, sans-serif; color: var(--text); background: var(--bg-grad);
+       background-attachment: fixed; min-height: 100vh; font-weight: 600; }
+button, input, select, textarea { font-family: inherit; color: inherit; }
+button { cursor: pointer; }
+h1 { font-size: 1.75rem; color: var(--head); margin: 6px 0 14px; font-weight: 700; }
+.sec { font-weight: 700; color: var(--head); font-size: 1.25rem; margin: 22px 0 10px; }
+.box-title { font-weight: 700; color: var(--head); font-size: 1.05rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.card { background: var(--card); border-radius: 22px; padding: 14px 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+.muted { color: var(--muted); } .soft { color: var(--soft); font-size: .85rem; }
+.row { display: flex; gap: 10px; align-items: center; }
+.spacer { flex: 1; }
+
+/* ---------- header, drawer, bottom nav ---------- */
+header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 10px;
+         padding: calc(env(safe-area-inset-top) + 8px) 16px 8px; background: color-mix(in srgb, var(--bg) 85%, transparent);
+         backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+header .brand { font-weight: 700; color: var(--head); font-size: 1.05rem; }
+.icon-btn { border: none; background: var(--card); width: 40px; height: 40px; border-radius: 14px; font-size: 1.2rem;
+            box-shadow: var(--shadow); }
+main { max-width: 1100px; margin: 0 auto; padding: 4px 16px calc(96px + env(safe-area-inset-bottom)); }
+body.page-garden main { padding-right: 44px; }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: flex; justify-content: space-around;
+           background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+           box-shadow: 0 -4px 20px rgba(157,23,77,.12); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+nav.tabs button { border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 2px;
+                  font-size: .68rem; font-weight: 700; color: var(--soft); padding: 4px 10px; border-radius: 14px; min-width: 70px; }
+nav.tabs button span { font-size: 1.35rem; line-height: 1.1; }
+nav.tabs button.active { color: var(--head); background: var(--chip); }
+.drawer-bg { position: fixed; inset: 0; background: rgba(40,10,40,.35); z-index: 90; display: none; }
+.drawer { position: fixed; top: 0; bottom: 0; left: 0; width: min(340px, 88vw); z-index: 100; overflow-y: auto;
+          background: linear-gradient(180deg, #fde7f3 0%, #efe3ff 100%); padding: calc(env(safe-area-inset-top) + 18px) 16px 30px;
+          transform: translateX(-105%); transition: transform .3s ease; }
+body.dark .drawer { background: linear-gradient(180deg, #2b1438 0%, #1f1230 100%); }
+body.drawer-open .drawer { transform: none; } body.drawer-open .drawer-bg { display: block; }
+.seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg button { border: 2px solid var(--line); background: var(--card); border-radius: 99px; padding: 6px 12px; font-weight: 700; font-size: .85rem; }
+.seg button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ---------- buttons, inputs ---------- */
+.btn { border: none; border-radius: 99px; padding: 10px 16px; font-weight: 700; background: var(--card); color: var(--text);
+       box-shadow: 0 2px 10px rgba(157,23,77,.12); font-size: .92rem; }
+.btn.primary { background: linear-gradient(120deg, #f472b6, #ec4899); color: #fff; }
+.btn.soft { background: var(--chip); box-shadow: none; }
+.btn.small { padding: 6px 12px; font-size: .8rem; }
+.btn:active { transform: scale(.96); }
+input[type=text], input[type=number], input[type=date], input[type=time], select {
+  width: 100%; border: 2px solid var(--line); background: var(--input); border-radius: 14px; padding: 10px 12px; font-size: 1rem; font-weight: 600; }
+label.lbl { display: block; font-size: .8rem; color: var(--muted); margin: 8px 0 4px; font-weight: 700; }
+details > summary { list-style: none; cursor: pointer; } details > summary::-webkit-details-marker { display: none; }
+
+/* ---------- lazy ---------- */
+.lazy-btn { border: none; border-radius: 99px; padding: 11px 20px; color: #fff; font-weight: 800; font-size: 1rem; letter-spacing: .3px;
+            background: linear-gradient(120deg, #a5b4fc, #c084fc 50%, #f9a8d4); background-size: 200% 200%;
+            box-shadow: 0 6px 18px rgba(139,92,246,.35); animation: shimmer 4s ease infinite; }
+.lazy-banner { position: relative; overflow: hidden; border-radius: 26px; padding: 20px 22px; color: #3b0764; margin-bottom: 10px;
+               background: linear-gradient(120deg, #c7d2fe, #e9d5ff 55%, #fbcfe8); box-shadow: 0 10px 30px rgba(124,58,237,.25);
+               display: flex; align-items: center; gap: 18px; }
+.lazy-emoji { font-size: 3.6rem; display: inline-block; animation: sway 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+.lazy-title { font-family: var(--meme); font-size: 1.6rem; text-transform: uppercase; letter-spacing: 1px; }
+.lazy-msg { font-weight: 600; margin-top: 2px; }
+.zzz { position: absolute; font-family: var(--meme); color: #ffffffcc; font-size: 1.5rem; animation: floatZ 4s ease-in infinite; }
+.zzz.z1 { right: 18%; bottom: 8px; } .zzz.z2 { right: 12%; bottom: 8px; animation-delay: 1.3s; font-size: 1.1rem; }
+.zzz.z3 { right: 6%; bottom: 8px; animation-delay: 2.6s; font-size: 1.9rem; }
+.back-btn { border: none; border-radius: 99px; padding: 10px 18px; color: #fff; font-weight: 800;
+            background: linear-gradient(120deg, #f472b6, #fb923c); box-shadow: 0 6px 16px rgba(236,72,153,.35); margin-bottom: 14px; }
+.lazy-party { position: fixed; inset: 0; z-index: 1000; pointer-events: none; overflow: hidden;
+              background: radial-gradient(circle at 50% 45%, #ede9fecc, #c7d2fe99 60%, #fbcfe866); animation: lpFade 5.2s ease forwards; }
+.lp-float { position: absolute; left: -12%; animation-name: lpDrift; animation-timing-function: ease-in-out; animation-fill-mode: both; }
+.lp-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; animation: lpPop 1.2s cubic-bezier(.34,1.56,.64,1) both; }
+.lp-sloth { font-size: 5rem; display: inline-block; animation: sway 1.6s ease-in-out infinite; transform-origin: 50% 10%; }
+.lp-text { font-family: var(--meme); font-size: 2.4rem; color: #6d28d9; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 3px 0 #fff; }
+.lp-sub { font-weight: 700; color: #7c3aed; }
+
+/* ---------- garden ---------- */
+.garden-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.garden.perfect { box-shadow: 0 0 0 3px #f9a8d4, 0 8px 28px rgba(236,72,153,.3); }
+.beds { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 12px 6px; margin-top: 8px; }
+.bloom { position: relative; width: 30%; max-width: 110px; text-align: center; }
+.bloom-ring { position: relative; width: 72px; height: 72px; margin: 0 auto; border-radius: 50%; }
+.bloom-ring svg { width: 72px; height: 72px; }
+.bring-bg { fill: var(--input); stroke: var(--line); stroke-width: 7; }
+.bring-fg { fill: none; stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+.bloom-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+.bloom-stage { position: absolute; right: -4px; bottom: -4px; width: 28px; height: 28px; border-radius: 50%; background: var(--card);
+               display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 2px 8px rgba(194,24,91,.2); }
+.bloom-name { margin-top: 6px; font-weight: 700; font-size: .82rem; }
+.bloom-count { font-size: .75rem; font-weight: 700; color: var(--soft); }
+.bloom.done .bloom-count { color: var(--accent); }
+.bloom.done .bloom-ring { box-shadow: 0 0 18px rgba(236,72,153,.45); }
+.anim .bloom.done .bloom-ring { animation: bloomPop .8s cubic-bezier(.34,1.56,.64,1) both; }
+.bloom.done .bloom-stage { animation: bob2 1.8s ease-in-out infinite; }
+.spark { position: absolute; font-size: .85rem; animation: twinkle 1.6s ease-in-out infinite; }
+.spark.s1 { top: -6px; left: 4px; } .spark.s2 { top: 8px; right: -4px; animation-delay: .5s; } .spark.s3 { bottom: 26px; left: -4px; animation-delay: 1s; }
+.perfect-msg { margin-top: 10px; text-align: center; font-weight: 700; color: var(--head); }
+
+/* ---------- water ---------- */
+.two { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 760px) { .two { grid-template-columns: 1fr 1.35fr; } }
+.water { display: flex; align-items: center; gap: 18px; }
+.glass { position: relative; width: 84px; height: 118px; flex-shrink: 0; overflow: hidden; border-radius: 6px 6px 28px 28px;
+         background: rgba(255,255,255,.75); border: 4px solid #e9d5ff; box-shadow: 0 6px 18px rgba(147,197,253,.35), inset 0 0 0 3px #fff; }
+body.dark .glass { background: rgba(255,255,255,.05); border-color: #6b4a8a; box-shadow: inset 0 0 0 3px #2a1a3a; }
+.liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(180deg, #a5c8ff, #8b9cf7);
+          transition: height 1.1s cubic-bezier(.34,1.56,.64,1); }
+.wave { position: absolute; left: 0; width: 200%; height: 14px; top: -13px; animation: waveMove 2.6s linear infinite; }
+.wave path { fill: #a5c8ff; } .wave.w2 { top: -10px; opacity: .6; animation-duration: 4.2s; animation-direction: reverse; } .wave.w2 path { fill: #c4b5fd; }
+.bubble { position: absolute; bottom: 0; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.8); animation: rise 3s ease-in infinite; }
+.bubble.b1 { left: 22%; } .bubble.b2 { left: 55%; width: 5px; height: 5px; animation-delay: 1s; } .bubble.b3 { left: 74%; animation-delay: 2s; }
+.water-info b { font-size: 1.7rem; display: block; line-height: 1.1; }
+.water-info small { color: var(--soft); }
+.water-info .hint { font-size: .82rem; color: var(--muted); margin-top: 6px; }
+.water-btns { display: flex; gap: 8px; margin-top: 12px; } .water-btns .btn { flex: 1; padding: 9px 4px; }
+
+/* ---------- reminders (sticky notes) ---------- */
+.rem { background-image: radial-gradient(#f9a8d455 1.2px, transparent 1.4px) !important; background-size: 16px 16px !important; }
+body.dark .rem { background-image: radial-gradient(#f472b630 1.2px, transparent 1.4px) !important; }
+.rem-count { margin-left: auto; background: var(--accent); color: #fff; font-weight: 700; font-size: .72rem; border-radius: 99px; padding: 2px 10px; }
+.rem-count.calm { background: #c4b5fd; }
+.bell { display: inline-block; transform-origin: 50% 0; } .bell.ringing { animation: bellring 2.8s ease-in-out infinite; }
+.board { display: flex; flex-wrap: wrap; gap: 16px 12px; margin-top: 12px; padding: 4px 2px 6px; }
+.note { position: relative; flex: 1 1 200px; padding: 18px 14px 12px; border-radius: 4px 4px 14px 4px; color: #5b2a4e;
+        box-shadow: 0 6px 14px rgba(157,23,77,.16); }
+.anim .note { animation: noteIn .55s cubic-bezier(.34,1.56,.64,1) both; }
+.note::before { content: ""; position: absolute; top: -9px; left: 50%; width: 64px; height: 18px; transform: translateX(-50%) rotate(-3deg);
+                border-radius: 2px; background: repeating-linear-gradient(45deg, #ffffffb0 0 6px, #fbcfe8b0 6px 12px); }
+.n0 { background: #ffe4ef; transform: rotate(-1.6deg); } .n1 { background: #efe3ff; transform: rotate(1.3deg); }
+.n2 { background: #ffedd5; transform: rotate(-0.8deg); } .n3 { background: #dcfce7; transform: rotate(1.8deg); }
+.n4 { background: #e0f2fe; transform: rotate(-1.2deg); }
+.note-head { font-family: var(--hand); font-size: 1.25rem; line-height: 1.15; display: flex; align-items: center; gap: 8px; }
+.note-sub { font-size: .8rem; font-weight: 600; color: #9d4b83; margin-top: 4px; }
+.rpill { display: inline-block; padding: 3px 10px; border-radius: 99px; font-weight: 700; font-size: .78rem; color: #5b2a4e;
+         margin: 5px 5px 0 0; background: #ffffffb3; }
+
+/* ---------- meme ---------- */
+.meme { margin: 4px 0 14px; border-radius: 22px; padding: 14px 18px; color: #fff; background: linear-gradient(120deg, #ff9ac8, #c084fc);
+        display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 24px rgba(236,72,153,.3); }
+.meme-emoji { font-size: 2.8rem; display: inline-block; animation: wiggle 1.4s ease-in-out infinite; }
+.meme-top, .meme-bottom { font-family: var(--meme); text-transform: uppercase; letter-spacing: 1px; line-height: 1.15;
+  text-shadow: 2px 2px 0 #9d174d, -1px -1px 0 #9d174d, 1px -1px 0 #9d174d, -1px 1px 0 #9d174d; }
+.meme-top { font-size: 1.4rem; } .meme-bottom { font-size: .95rem; }
+
+/* ---------- week grid ---------- */
+.week-nav { display: flex; align-items: center; gap: 8px; margin: 18px 0 8px; }
+.week-nav .label { flex: 1; text-align: center; font-weight: 700; color: var(--muted); }
+.week-nav .btn { padding: 8px 14px; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr) 46px; gap: 6px 4px; align-items: center; }
+.grid .h-name { display: none; }
+.day-head { text-align: center; color: var(--muted); font-size: .7rem; line-height: 1.2; padding: 4px 0; border-radius: 12px; }
+.day-head b { font-size: .95rem; display: block; }
+.day-head.today { background: var(--accent); color: #fff; box-shadow: 0 3px 10px rgba(236,72,153,.35); }
+body.lazy:not(.dark) .day-head.today { background: #7c3aed; }
+.day-head.weekend { background: var(--chip2); }
+.streak-h, .streak { text-align: center; font-weight: 700; color: var(--muted); font-size: .78rem; line-height: 1.2; }
+.streak small { display: block; font-weight: 600; color: var(--soft); font-size: .7rem; }
+.cat-head { grid-column: 1 / -1; margin: 12px 0 0; font-weight: 700; color: var(--head); font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.cat-head small { color: var(--muted); font-weight: 700; font-size: .72rem; background: var(--chip); border-radius: 99px; padding: 2px 10px; }
+.cat-head small.ok { background: var(--accent); color: #fff; }
+.habit-pill { grid-column: 1 / -1; padding: 7px 12px; border-radius: 14px; font-weight: 700; color: var(--text);
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 6px solid; margin-top: 4px; }
+.days-tag { display: inline-block; margin-left: 8px; font-size: .66rem; font-weight: 700; color: var(--muted); background: #ffffffaa;
+            border-radius: 99px; padding: 1px 7px; vertical-align: middle; }
+body.dark .days-tag { background: #ffffff18; }
+.cell { justify-self: center; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--c); background: var(--card);
+        color: var(--c); font-size: 1rem; font-weight: 700; padding: 0; display: flex; align-items: center; justify-content: center;
+        transition: transform .15s ease; }
+.cell:active { transform: scale(.85); }
+.cell.on { background: var(--c); color: var(--t); }
+.cell.rest { border-style: dashed; border-color: #e9d5ff; color: #d8b4fe; background: transparent; }
+body.dark .cell.rest { border-color: #4a2d63; color: #6b4a8a; }
+.cell.future { opacity: .3; pointer-events: none; }
+.cell.num { font-size: .8rem; }
+@media (min-width: 760px) {
+  .grid { grid-template-columns: minmax(170px, 1.7fr) repeat(7, 1fr) 60px; gap: 8px 6px; }
+  .grid .h-name { display: block; font-weight: 700; }
+  .habit-pill { grid-column: auto; margin-top: 0; }
+  .cell { width: 42px; height: 42px; font-size: 1.15rem; }
+}
+.progress { height: 12px; background: var(--chip); border-radius: 99px; overflow: hidden; margin: 6px 0; }
+.progress > div { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #f9a8d4, #ec4899); transition: width .8s ease; }
+
+/* ---------- today bar ---------- */
+.tbar { position: fixed; right: 6px; top: 50%; transform: translateY(-50%); z-index: 40; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.tbar-track { width: 18px; height: 42vh; background: var(--chip); border-radius: 99px; position: relative; border: 2px solid var(--card);
+              box-shadow: inset 0 2px 6px rgba(194,24,91,.18), 0 6px 18px rgba(236,72,153,.25); }
+.tbar-fill { position: absolute; bottom: 0; left: 0; right: 0; height: 0; border-radius: 99px;
+             background: linear-gradient(0deg, #ec4899, #f472b6 55%, #c084fc); transition: height 1.1s cubic-bezier(.34,1.56,.64,1); }
+.tbar-fill.full { box-shadow: 0 0 18px rgba(236,72,153,.7); }
+.tbar-heart { position: absolute; top: -13px; left: 50%; font-size: 1.1rem; animation: bob 1.6s ease-in-out infinite; }
+.tbar-count { font-weight: 700; color: var(--muted); font-size: .7rem; }
+@media (min-width: 760px) { .tbar { right: 22px; } .tbar-track { width: 30px; height: 54vh; } .tbar-heart { font-size: 1.4rem; top: -16px; } body.page-garden main { padding-right: 80px; } }
+
+/* ---------- planner ---------- */
+.corkboard { border-radius: 26px; padding: 16px 16px 18px; margin-bottom: 16px; border: 6px solid #f9c9dc;
+  background-color: #fbe3d6; background-image: radial-gradient(#e8b4a0 1px, transparent 1.3px), radial-gradient(#f4c7b5 1px, transparent 1.3px);
+  background-size: 18px 18px, 18px 18px; background-position: 0 0, 9px 9px; box-shadow: inset 0 0 0 2px #fff6, 0 10px 28px rgba(219,39,119,.18); }
+body.dark .corkboard { background-color: #3a2337; border-color: #5b2a4e; background-image: radial-gradient(#5b3a55 1px, transparent 1.3px); }
+.board-title { font-family: var(--hand); font-size: 1.7rem; color: #9d174d; }
+body.dark .board-title { color: var(--head); }
+.new-note { background: linear-gradient(120deg, #fff 0%, #fdf2f8 60%, #f5f3ff 100%); border: 2px dashed #f472b6; border-radius: 18px;
+            padding: 10px 14px; margin: 10px 0 14px; color: #5b2a4e; }
+body.dark .new-note { background: var(--input); color: var(--text); }
+.new-note summary { font-weight: 700; color: #db2777; }
+.pins { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 12px; }
+@media (min-width: 760px) { .pins { grid-template-columns: repeat(4, 1fr); } }
+.pin-note { position: relative; padding: 22px 12px 10px; border-radius: 3px 3px 16px 3px; min-height: 86px; color: #5b2a4e;
+            box-shadow: 0 8px 16px rgba(120,40,60,.18); }
+.pin-note.soon { box-shadow: 0 0 0 3px #ec4899, 0 10px 22px rgba(236,72,153,.35); }
+.pin-note.past { opacity: .55; filter: grayscale(.4); }
+.pin-head { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); font-size: 1.45rem; }
+.pin-text { font-family: var(--hand); font-size: 1.2rem; line-height: 1.2; word-wrap: break-word; }
+.pin-when { display: inline-block; font-size: .7rem; font-weight: 700; border-radius: 99px; padding: 2px 8px; background: #ffffffc0; color: #9d4b83; margin-top: 6px; }
+.pin-when.soon { background: #ec4899; color: #fff; }
+.pin-done { margin-top: 8px; border: none; background: #ffffffc0; border-radius: 99px; padding: 4px 10px; font-weight: 700; font-size: .75rem; color: #9d4b83; }
+.board-empty { text-align: center; padding: 10px 0 4px; font-family: var(--hand); font-size: 1.2rem; color: #9d4b83; }
+.pbox { border-radius: 26px; padding: 18px 18px 14px; margin-bottom: 16px; position: relative; overflow: hidden; }
+.pbox.todo { background: linear-gradient(160deg, #ffe4f1 0%, #fdf2f8 45%, #f3e8ff 100%); box-shadow: 0 10px 28px rgba(236,72,153,.18); }
+.pbox.tomorrow { background: linear-gradient(160deg, #e0e7ff 0%, #ede9fe 45%, #fce7f3 100%); box-shadow: 0 10px 28px rgba(99,102,241,.18); }
+.pbox.weekend { background: linear-gradient(160deg, #ffedd5 0%, #fed7e2 50%, #e9d5ff 100%); box-shadow: 0 10px 28px rgba(249,115,22,.18); }
+body.dark .pbox.todo { background: linear-gradient(160deg, #3b1d3f, #2a1a3a 60%, #2e1f4d); }
+body.dark .pbox.tomorrow { background: linear-gradient(160deg, #1e1b4b, #2e1f4d 55%, #3b1d3f); }
+body.dark .pbox.weekend { background: linear-gradient(160deg, #3d2530, #3a1d3f 50%, #2e1f4d); }
+.day-date { font-family: var(--hand); font-size: 1.6rem; color: var(--head); line-height: 1.1; }
+.pbox.tomorrow .day-date { color: #6d28d9; } body.dark .pbox.tomorrow .day-date { color: #c4b5fd; }
+.weekend-count { font-family: var(--hand); font-size: 1.45rem; color: #c2410c; line-height: 1.15; }
+body.dark .weekend-count { color: #fdba74; }
+.todo-meta { font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+.task { display: flex; align-items: center; gap: 10px; background: #ffffffd9; border-radius: 16px; padding: 10px 12px; margin: 8px 0;
+        box-shadow: 0 2px 8px rgba(157,23,77,.08); color: #5b2a4e; }
+body.dark .task { background: #ffffff14; color: var(--text); }
+.task .check { width: 24px; height: 24px; border-radius: 8px; border: 2px solid #f9a8d4; background: #fff; flex-shrink: 0; padding: 0;
+               color: #fff; font-size: .9rem; display: flex; align-items: center; justify-content: center; }
+.task.done .check { background: #ec4899; border-color: #ec4899; }
+.task .txt { flex: 1; word-break: break-word; }
+.task.done .txt { text-decoration: line-through; opacity: .5; }
+.task .del { border: none; background: none; color: #d8a3c4; font-size: 1rem; padding: 4px 6px; }
+.add-row { display: flex; gap: 8px; margin-top: 8px; }
+.add-row input { background: #ffffffd9; border-color: transparent; }
+body.dark .add-row input { background: var(--input); }
+.add-row .btn { background: #ec4899; color: #fff; padding: 0 16px; font-size: 1.2rem; }
+.star { position: absolute; color: #a78bfa; animation: twinkle 2.4s ease-in-out infinite; }
+.star.s1 { top: 18px; right: 30px; font-size: 1.2rem; } .star.s2 { top: 44px; right: 64px; font-size: .9rem; animation-delay: .8s; }
+.star.s3 { top: 14px; right: 100px; font-size: .75rem; animation-delay: 1.6s; }
+.wdots { display: flex; gap: 6px; margin: 8px 0 6px; }
+.wdot { width: 14px; height: 14px; border-radius: 50%; background: #ffffffb0; border: 2px solid #fdba74; }
+.wdot.on { background: #fb923c; border-color: #fb923c; }
+
+/* ---------- overview ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 2px solid var(--line); background: var(--card); color: var(--text); border-radius: 99px; padding: 5px 11px; font-weight: 700; font-size: .8rem; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.summary { background: linear-gradient(120deg, #fde7f3, #efe3ff); border-radius: 22px; padding: 14px 18px; font-weight: 600; margin: 12px 0 4px;
+           display: flex; flex-wrap: wrap; gap: 6px 22px; color: #5b2a4e; }
+body.dark .summary { background: linear-gradient(120deg, #3a1d45, #2b1e4a); color: var(--text); }
+.summary b { color: var(--head); font-size: 1.1rem; }
+.hgrid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 760px) { .hgrid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); } }
+.hcard { background: var(--card); border-radius: 24px; padding: 14px 16px 16px; box-shadow: var(--shadow); border-top: 6px solid var(--c); }
+.hhead { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem; }
+.hemoji { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.45rem; background: var(--cl); flex-shrink: 0; }
+.hbody { display: flex; align-items: center; gap: 14px; margin: 12px 0 12px; }
+.ring { width: 80px; height: 80px; flex-shrink: 0; }
+.ring-bg { fill: none; stroke: var(--line); stroke-width: 9; }
+.ring-fg { fill: none; stroke-width: 9; stroke-linecap: round; }
+.ring-txt { font: 700 18px 'Quicksand', sans-serif; fill: var(--text); }
+.hstats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 1; }
+.hstat b { display: block; font-size: 1.1rem; } .hstat small { color: var(--soft); font-size: .7rem; font-weight: 600; }
+.pearls { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.p { width: var(--s); height: var(--s); border-radius: 50%; border: 2px solid var(--c); background: var(--card); opacity: .5;
+     display: inline-flex; align-items: center; justify-content: center; font-size: calc(var(--s) * .55); line-height: 1; color: var(--t); }
+.p.on { background: var(--c); opacity: 1; }
+.p.part { background: linear-gradient(0deg, var(--c) 50%, var(--card) 50%); opacity: .85; }
+.p.rest { opacity: .3; border-style: dashed; transform: scale(.7); }
+.p.today { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--c); opacity: 1; }
+.mlabel { font-size: .7rem; font-weight: 700; color: var(--soft); padding: 0 2px 0 6px; }
+.legend { --c: #ec4899; --t: #fff; --s: 12px; font-size: .75rem; color: var(--soft); margin-top: 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.rrow { display: flex; align-items: center; gap: 10px; margin: 11px 0; }
+.rname { width: 130px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (min-width: 760px) { .rname { width: 200px; } }
+.rtrack { flex: 1; height: 22px; background: var(--chip); border-radius: 99px; overflow: hidden; }
+.rfill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--cl2), var(--c)); }
+.anim .rfill { animation: grow 1.3s cubic-bezier(.22,1,.36,1) both; }
+.rpct { width: 44px; text-align: right; font-weight: 700; color: var(--muted); }
+
+/* ---------- manage ---------- */
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatches label { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; display: inline-block; }
+.swatches input { display: none; }
+.swatches input:checked + label { border-color: var(--text); transform: scale(1.1); }
+.daychips { display: flex; gap: 5px; flex-wrap: wrap; }
+.daychips input { display: none; }
+.daychips label { border: 2px solid var(--line); border-radius: 99px; padding: 5px 9px; font-size: .8rem; font-weight: 700; background: var(--card); }
+.daychips input:checked + label { background: var(--accent); border-color: var(--accent); color: #fff; }
+.mhabit { background: var(--card); border-radius: 18px; padding: 10px 14px; box-shadow: var(--shadow); margin-bottom: 10px; }
+.mhabit summary { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.mhabit summary .arrow { margin-left: auto; color: var(--soft); transition: transform .2s; }
+.mhabit[open] summary .arrow { transform: rotate(180deg); }
+.sortrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.sortrow .habit-pill { flex: 1; margin: 0; }
+.sortrow .btn { padding: 6px 12px; }
+.danger { color: #e11d48; }
+
+/* ---------- affirmation, rules ---------- */
+.aff { position: relative; overflow: hidden; background: linear-gradient(135deg, var(--card) 0%, #fdf0f7 55%, #f3e8ff 100%); }
+body.dark .aff { background: linear-gradient(135deg, #2a1a3a 0%, #35204a 100%); }
+.aff::after { content: "❝"; position: absolute; right: 12px; bottom: -24px; font-size: 6rem; color: #f9a8d4; opacity: .35; font-family: Georgia, serif; }
+.aff-kind { display: inline-block; background: var(--chip); color: var(--head); font-weight: 700; font-size: .72rem; border-radius: 99px; padding: 2px 10px; margin: 2px 0 8px; }
+.aff-text { font-size: 1.1rem; font-weight: 700; line-height: 1.35; position: relative; z-index: 1; }
+.aff-who { margin-top: 6px; color: var(--soft); font-style: italic; position: relative; z-index: 1; }
+.grule { display: flex; gap: 8px; align-items: flex-start; font-weight: 600; font-size: .88rem; margin-top: 8px; }
+
+/* ---------- misc: toast, balloons, modal, onboarding ---------- */
+#toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+         background: var(--card); color: var(--text); padding: 12px 18px; border-radius: 16px; box-shadow: 0 10px 30px rgba(157,23,77,.25);
+         font-weight: 700; z-index: 2000; opacity: 0; transition: all .35s ease; pointer-events: none; max-width: 90vw; text-align: center; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.balloon { position: fixed; bottom: -80px; font-size: 2.6rem; z-index: 1500; pointer-events: none; animation: balloonUp 4s ease-in forwards; }
+.modal-bg { position: fixed; inset: 0; background: rgba(40,10,40,.4); z-index: 1200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal { background: var(--card); border-radius: 24px; padding: 18px; width: min(360px, 100%); box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.stepper { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+.stepper .btn { width: 48px; height: 48px; padding: 0; font-size: 1.4rem; }
+.stepper input { text-align: center; font-size: 1.4rem; }
+.welcome { text-align: center; padding: 40px 10px; }
+.welcome .big { font-size: 4rem; }
+
+/* ---------- keyframes ---------- */
+.anim .pop { animation: popIn .55s ease both; }
+@keyframes popIn { from { opacity: 0; transform: translateY(12px) scale(.98) } }
+@keyframes noteIn { from { opacity: 0; transform: translateY(-14px) rotate(-6deg) scale(.9) } }
+@keyframes bloomPop { 0% { transform: scale(.7) } 60% { transform: scale(1.12) } 100% { transform: scale(1) } }
+@keyframes bob { 0%,100% { transform: translate(-50%, 0) } 50% { transform: translate(-50%, -6px) } }
+@keyframes bob2 { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+@keyframes twinkle { 0%,100% { opacity: 0; transform: scale(.5) } 50% { opacity: 1; transform: scale(1.1) } }
+@keyframes waveMove { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+@keyframes rise { 0% { bottom: 0; opacity: 0 } 20% { opacity: 1 } 100% { bottom: 92%; opacity: 0 } }
+@keyframes wiggle { 0%,100% { transform: rotate(-8deg) scale(1) } 50% { transform: rotate(8deg) scale(1.1) } }
+@keyframes bellring { 0%,70%,100% { transform: rotate(0) } 74% { transform: rotate(16deg) } 78% { transform: rotate(-14deg) } 82% { transform: rotate(10deg) } 86% { transform: rotate(-8deg) } 90% { transform: rotate(4deg) } }
+@keyframes sway { 0%,100% { transform: rotate(-7deg) } 50% { transform: rotate(7deg) } }
+@keyframes floatZ { 0% { transform: translateY(0) rotate(0); opacity: 0 } 20% { opacity: 1 } 100% { transform: translateY(-100px) rotate(20deg); opacity: 0 } }
+@keyframes shimmer { 0%,100% { background-position: 0% 50% } 50% { background-position: 100% 50% } }
+@keyframes lpDrift { 0% { transform: translateX(0) rotate(-10deg); opacity: 0 } 15% { opacity: 1 } 50% { transform: translateX(60vw) translateY(-30px) rotate(8deg) } 100% { transform: translateX(125vw) translateY(10px) rotate(-6deg); opacity: 0 } }
+@keyframes lpFade { 0% { opacity: 0 } 10% { opacity: 1 } 75% { opacity: 1 } 100% { opacity: 0; visibility: hidden } }
+@keyframes lpPop { from { transform: translate(-50%, -50%) scale(.3); opacity: 0 } }
+@keyframes grow { from { width: 0 } }
+@keyframes balloonUp { 0% { transform: translateY(0) rotate(-6deg) } 50% { transform: translateY(-55vh) rotate(6deg) } 100% { transform: translateY(-120vh) rotate(-4deg) } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<header>
+  <button class="icon-btn" data-act="drawer" aria-label="Menu">☰</button>
+  <div class="brand">🌷 Glow Garden</div>
+</header>
+<div class="drawer-bg" data-act="drawer"></div>
+<aside class="drawer" id="drawer"></aside>
+<main id="app"></main>
+<nav class="tabs" id="tabs">
+  <button data-act="page" data-page="garden"><span>🌷</span>Garden</button>
+  <button data-act="page" data-page="planner"><span>📝</span>Planner</button>
+  <button data-act="page" data-page="overview"><span>📊</span>Overview</button>
+  <button data-act="page" data-page="manage"><span>🎀</span>Habits</button>
+</nav>
+<div id="toast"></div>
+<input type="file" id="restoreFile" accept=".json,application/json" hidden>
+
+<script>
+"use strict";
+// ============================================================
+// Constants
+// ============================================================
+const KEY = "glowgarden.v1";
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const CATEGORIES = [["Morning routine", "☀️", "Morning", "#f9a8d4"], ["After work routine", "🏡", "After work", "#fdba74"],
+  ["Night routine", "🌙", "Night", "#a855f7"], ["Food stuff", "🍓", "Food", "#ec4899"], ["Mental health", "🧠", "Mind", "#c4b5fd"],
+  ["Body", "💪", "Body", "#db2777"], ["Other", "✨", "Other", "#93c5fd"]];
+const CAT = Object.fromEntries(CATEGORIES.map(c => [c[0], { icon: c[1], short: c[2], color: c[3] }]));
+const RULE_MIN = 2;
+const PALETTE = [["Rose", "#f9a8d4"], ["Pink", "#ec4899"], ["Raspberry", "#db2777"], ["Purple", "#a855f7"], ["Lavender", "#c4b5fd"],
+  ["Lilac", "#d8b4fe"], ["Peach", "#fdba74"], ["Mint", "#6ee7b7"], ["Sky blue", "#93c5fd"], ["Lemon", "#fde68a"]];
+const EMOJIS = ["🌸","💖","🎀","✨","🦋","🧘‍♀️","🏃‍♀️","🚶‍♀️","💪","💧","📚","📓","📝","📋","🙏","🛏️","🥗","🍳","🍓","💤","🌙","☕","💅","🧴","🦷","💊","🎨","🎶","🪴","📵"];
+const HEARTS = {"#f9a8d4":"💓","#ec4899":"💗","#db2777":"💖","#a855f7":"💜","#c4b5fd":"💜","#d8b4fe":"💜","#fdba74":"🧡","#6ee7b7":"💚","#93c5fd":"💙","#fde68a":"💛"};
+const MEMES = {
+  0: [["😴", "Me at 8 am", "The habits: 👁️👄👁️"], ["☀️", "Rise and shine, bestie", "The habits won't check themselves"]],
+  1: [["🐣", "Baby steps", "Are still steps, bestie"], ["☕", "One down", "Slay loading... please wait"]],
+  2: [["💅", "Halfway there", "And looking good doing it"], ["🚀", "Look at you go", "Main character energy"]],
+  3: [["👀", "Almost there", "Don't you dare stop now"], ["🔥", "She's on fire", "Just a few left, queen"]],
+  4: [["💃", "Go girl!", "That girl era: unlocked 👑"], ["👑", "All done", "Slay. Just slay."]]};
+const PIN_COLORS = ["🩷 Pink", "💜 Lilac", "🍑 Peach", "🌿 Mint", "🩵 Blue"];
+const AFFIRMATIONS = [["✨ Affirmation", "I am becoming the woman I want to be, one habit at a time.", ""], ["✨ Affirmation", "I am allowed to take up space.", ""], ["✨ Affirmation", "My consistency is my superpower.", ""], ["✨ Affirmation", "I choose progress over perfection.", ""], ["✨ Affirmation", "I am proud of how far I've come.", ""], ["✨ Affirmation", "My body deserves rest, water and kindness.", ""], ["✨ Affirmation", "I am worthy of good things.", ""], ["✨ Affirmation", "I can do hard things.", ""], ["✨ Affirmation", "Today I treat myself like someone I love.", ""], ["✨ Affirmation", "I am calm, grounded and in control.", ""], ["✨ Affirmation", "My future self is cheering for me.", ""], ["✨ Affirmation", "I am growing, even when I can't see it yet.", ""], ["✨ Affirmation", "I don't need to be perfect to be amazing.", ""], ["✨ Affirmation", "I keep the promises I make to myself.", ""], ["✨ Affirmation", "I am the main character of my life.", ""], ["✨ Affirmation", "Every day I get a little bit stronger.", ""], ["✨ Affirmation", "I am enough, exactly as I am today.", ""], ["✨ Affirmation", "I release what I can't control.", ""], ["✨ Affirmation", "My energy is precious and I protect it.", ""], ["✨ Affirmation", "I glow from the inside out.", ""], ["✨ Affirmation", "I trust the timing of my life.", ""], ["✨ Affirmation", "I am building a life I don't need a vacation from.", ""], ["✨ Affirmation", "Small steps still move me forward.", ""], ["✨ Affirmation", "I give myself permission to rest without guilt.", ""], ["✨ Affirmation", "I am disciplined, soft and strong at the same time.", ""], ["✨ Affirmation", "My habits are love letters to my future self.", ""], ["✨ Affirmation", "I deserve the same effort I give to others.", ""], ["✨ Affirmation", "I am open to new beginnings.", ""], ["✨ Affirmation", "I believe in the woman I am becoming.", ""], ["✨ Affirmation", "Today is full of possibilities.", ""], ["✨ Affirmation", "I am grateful for my body and everything it does for me.", ""], ["✨ Affirmation", "My mind is clear and my heart is light.", ""], ["✨ Affirmation", "I radiate confidence and kindness.", ""], ["✨ Affirmation", "I don't compare my chapter one to someone else's chapter twenty.", ""], ["✨ Affirmation", "I am in charge of how I feel today.", ""], ["✨ Affirmation", "Hard days don't erase my progress.", ""], ["✨ Affirmation", "I show up for myself, even on lazy days.", ""], ["✨ Affirmation", "Good things are coming my way.", ""], ["✨ Affirmation", "I am exactly where I need to be.", ""], ["✨ Affirmation", "My peace matters more than being right.", ""], ["✨ Affirmation", "I am gentle with myself when I fall behind.", ""], ["✨ Affirmation", "Taking care of myself is not selfish.", ""], ["✨ Affirmation", "I am capable of amazing things.", ""], ["✨ Affirmation", "I turn my dreams into plans and my plans into habits.", ""], ["✨ Affirmation", "I am safe, loved and supported.", ""], ["✨ Affirmation", "I let go of yesterday and welcome today.", ""], ["✨ Affirmation", "I am a work of art and a work in progress.", ""], ["✨ Affirmation", "I choose joy on purpose.", ""], ["✨ Affirmation", "I celebrate my small wins.", ""], ["✨ Affirmation", "I am patient with my growth.", ""], ["✨ Affirmation", "My standards are high and my heart is soft.", ""], ["✨ Affirmation", "I trust myself to figure it out.", ""], ["✨ Affirmation", "I am becoming 1% better every day.", ""], ["✨ Affirmation", "My worth is not measured by my productivity.", ""], ["✨ Affirmation", "I fill my own cup first.", ""], ["✨ Affirmation", "I deserve a life that feels good on the inside.", ""], ["✨ Affirmation", "I am resilient. I always bounce back.", ""], ["✨ Affirmation", "Today I choose me.", ""], ["✨ Affirmation", "I bring light into every room I walk into.", ""], ["✨ Affirmation", "What is meant for me will find me.", ""], ["✨ Affirmation", "I am thankful for today, for the good moments and for the lessons.", ""], ["✨ Affirmation", "I speak to myself with love.", ""], ["✨ Affirmation", "I am allowed to change, grow and start again.", ""], ["✨ Affirmation", "My calm is my power.", ""], ["✨ Affirmation", "Today I choose habits over excuses.", ""], ["✨ Affirmation", "I am proud of the girl who keeps going.", ""], ["✨ Affirmation", "I make healthy choices because I love myself.", ""], ["✨ Affirmation", "I am the author of my own story.", ""], ["✨ Affirmation", "Little things done with love become big things.", ""], ["✨ Affirmation", "My routine is self-respect in action.", ""], ["✨ Affirmation", "I let my light shine without dimming it for anyone.", ""], ["✨ Affirmation", "I am thriving, not just surviving.", ""], ["✨ Affirmation", "Peace begins with one deep breath.", ""], ["✨ Affirmation", "My potential is endless.", ""], ["✨ Affirmation", "I trust my journey, even when it's slow.", ""], ["✨ Affirmation", "I'm not lucky, I'm consistent.", ""], ["✨ Affirmation", "I water my own garden.", ""], ["✨ Affirmation", "Soft life, strong habits.", ""], ["✨ Affirmation", "I deserve to feel good in my body and in my mind.", ""], ["✨ Affirmation", "I am becoming my own safe place.", ""], ["✨ Affirmation", "My dreams are valid and my effort is enough.", ""], ["✨ Affirmation", "I am learning to love the process.", ""], ["🔥 Motivation", "Done is better than perfect.", ""], ["🔥 Motivation", "You don't have to feel motivated. You just have to start.", ""], ["🔥 Motivation", "Two minutes is enough to begin.", ""], ["🔥 Motivation", "Don't break the chain, bestie.", ""], ["🔥 Motivation", "Slow progress is still progress.", ""], ["🔥 Motivation", "Your only competition is who you were yesterday.", ""], ["🔥 Motivation", "Discipline is choosing what you want most over what you want now.", ""], ["🔥 Motivation", "One day or day one. You decide.", ""], ["🔥 Motivation", "The best time to start was yesterday. The next best time is now.", ""], ["🔥 Motivation", "A little progress every day adds up to big results.", ""], ["🔥 Motivation", "Show up, even if it's messy.", ""], ["🔥 Motivation", "Make your future self proud.", ""], ["🔥 Motivation", "Be the energy you want to attract.", ""], ["🔥 Motivation", "Consistency beats intensity.", ""], ["🔥 Motivation", "You've survived 100% of your bad days so far.", ""], ["🔥 Motivation", "It's okay to start small. It's not okay to never start.", ""], ["🔥 Motivation", "You are one habit away from a different life.", ""], ["🔥 Motivation", "Romanticize your routines.", ""], ["🔥 Motivation", "Missing once is an accident. Missing twice is the start of a new habit.", ""], ["🔥 Motivation", "Fall in love with the process and the results will follow.", ""], ["🔥 Motivation", "Dream big, start small, act now.", ""], ["🔥 Motivation", "Your vibe today: unbothered and unstoppable.", ""], ["🔥 Motivation", "Don't wait for Monday. Today is a great day to start.", ""], ["🔥 Motivation", "You're not behind. You're on your own timeline.", ""], ["🔥 Motivation", "Tiny steps, big glow-up.", ""], ["🔥 Motivation", "Start where you are, not where you think you should be.", ""], ["🔥 Motivation", "Energy flows where attention goes.", ""], ["🔥 Motivation", "Do it for the girl you'll be in one year.", ""], ["🔥 Motivation", "Be stubborn about your goals and flexible about your methods.", ""], ["🔥 Motivation", "Some days you bloom, some days you grow roots. Both count.", ""], ["🔥 Motivation", "Pretty girls drink water and check their habits.", ""], ["🔥 Motivation", "You didn't come this far to only come this far.", ""], ["🔥 Motivation", "Discomfort is the price of growth.", ""], ["🔥 Motivation", "Be so consistent they think it's luck.", ""], ["🔥 Motivation", "Your habits today are your results tomorrow.", ""], ["🔥 Motivation", "Make it so easy you can't say no.", ""], ["🔥 Motivation", "Rest if you must, but don't quit.", ""], ["🔥 Motivation", "Nobody is coming to do it for you, and that's the good news: you get to.", ""], ["🔥 Motivation", "Choose the hard thing today so tomorrow gets easier.", ""], ["🔥 Motivation", "Fake it till you make it a habit.", ""], ["🔥 Motivation", "A walk, a glass of water and a deep breath fix more than you think.", ""], ["🔥 Motivation", "You're the CEO of your own glow-up.", ""], ["🔥 Motivation", "Every check mark counts.", ""], ["🔥 Motivation", "Let your actions speak louder than your plans.", ""], ["🔥 Motivation", "Your comfort zone is cozy, but nothing grows there.", ""], ["🔥 Motivation", "Plot twist: you actually do the thing today.", ""], ["🔥 Motivation", "Main character move: doing your habits without anyone asking.", ""], ["🔥 Motivation", "Hydrate, stretch, slay.", ""], ["🔥 Motivation", "The girl who does her habits on bad days becomes unstoppable.", ""], ["🔥 Motivation", "You are your best investment.", ""], ["🔥 Motivation", "Just do the next right thing.", ""], ["🔥 Motivation", "Today counts. Make it a good one.", ""], ["🔥 Motivation", "Motivation fades. Habits stay.", ""], ["🔥 Motivation", "Be the girl who finishes what she starts.", ""], ["💡 Tip", "Stack a new habit onto an old one: after I brush my teeth, I write one line in my journal.", ""], ["💡 Tip", "Drink a glass of water before your first coffee.", ""], ["💡 Tip", "Lay out tomorrow's clothes tonight.", ""], ["💡 Tip", "Keep your phone in another room for the first 30 minutes of your day.", ""], ["💡 Tip", "Make your bed first thing. It's your first win of the day.", ""], ["💡 Tip", "Write down three things you're grateful for before you sleep.", ""], ["💡 Tip", "Too tired for the full workout? Do 5 minutes. It still counts.", ""], ["💡 Tip", "Put your book on your pillow so it's waiting for you at bedtime.", ""], ["💡 Tip", "Keep a water bottle where you can always see it.", ""], ["💡 Tip", "Prepare a healthy snack before you get hungry.", ""], ["💡 Tip", "Take a 10 minute walk after lunch or dinner.", ""], ["💡 Tip", "Two-minute rule: if it takes less than two minutes, do it right now.", ""], ["💡 Tip", "Dim the lights an hour before bed.", ""], ["💡 Tip", "Box breathing: in for 4, hold for 4, out for 4, hold for 4. Repeat 4 times.", ""], ["💡 Tip", "Put on your favorite playlist to make chores more fun.", ""], ["💡 Tip", "Plan your top 3 tasks for tomorrow before you finish today.", ""], ["💡 Tip", "Stretch for two minutes right after you wake up.", ""], ["💡 Tip", "Swap one scrolling session for one chapter of your book.", ""], ["💡 Tip", "Plan a small reward for a full week of habits.", ""], ["💡 Tip", "Keep your skincare where you'll see it, not hidden in a drawer.", ""], ["💡 Tip", "Get some daylight in the morning. It helps you sleep better at night.", ""], ["💡 Tip", "Add one more colorful vegetable to your plate today.", ""], ["💡 Tip", "Set a 10 minute timer and tidy up. It's surprisingly satisfying.", ""], ["💡 Tip", "Send a sweet message to someone you love today.", ""], ["💡 Tip", "Say no to one thing that drains you.", ""], ["💡 Tip", "Every hour, look at something far away for 20 seconds to rest your eyes.", ""], ["💡 Tip", "Fill tomorrow's water bottle tonight.", ""], ["💡 Tip", "Feeling stuck? Change your environment: new room, new café, fresh air.", ""], ["💡 Tip", "On busy days, one sentence in your journal is enough.", ""], ["💡 Tip", "Go to bed 15 minutes earlier tonight.", ""], ["💡 Tip", "Turn putting on lip balm or lotion into a tiny self-care moment.", ""], ["💡 Tip", "Take the stairs whenever you can.", ""], ["💡 Tip", "Cook a little extra tonight for tomorrow's lunch.", ""], ["💡 Tip", "Head too full? Do a 5 minute brain dump on paper.", ""], ["💡 Tip", "Make your environment the reminder: put your walking shoes by the door.", ""], ["💡 Tip", "Take one quiet minute to pray or reflect before your day begins.", ""], ["💡 Tip", "Notice one beautiful thing on your walk today.", ""], ["💡 Tip", "Keep a done list, not just a to-do list.", ""], ["💡 Tip", "Put fruit at eye level in the fridge.", ""], ["💡 Tip", "Charge your phone outside the bedroom.", ""], ["💡 Tip", "Replace \"I have to\" with \"I get to\".", ""], ["💡 Tip", "Low energy day? Do your two easiest habits first.", ""], ["💡 Tip", "Drink a glass of water with every meal.", ""], ["💡 Tip", "Write today's intention on a sticky note and put it on your mirror.", ""], ["💡 Tip", "Prepare your morning: coffee mug out, outfit ready, phone on silent.", ""], ["💡 Tip", "Pair something you need to do with something you love: podcast + walk.", ""], ["📖 Quote", "The journey of a thousand miles begins with a single step.", "Lao Tzu"], ["📖 Quote", "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", "Will Durant"], ["📖 Quote", "You do not rise to the level of your goals. You fall to the level of your systems.", "James Clear"], ["📖 Quote", "Every action you take is a vote for the type of person you wish to become.", "James Clear"], ["📖 Quote", "Habits are the compound interest of self-improvement.", "James Clear"], ["📖 Quote", "What you do every day matters more than what you do once in a while.", "Gretchen Rubin"], ["📖 Quote", "Fall seven times, stand up eight.", "Japanese proverb"], ["📖 Quote", "Little by little, one travels far.", "Spanish proverb"], ["📖 Quote", "Well done is better than well said.", "Benjamin Franklin"], ["📖 Quote", "Knowing is not enough; we must apply. Willing is not enough; we must do.", "Johann Wolfgang von Goethe"], ["📖 Quote", "Rome wasn't built in a day.", "Proverb"], ["📖 Quote", "This too shall pass.", "Proverb"], ["📖 Quote", "Bloom where you are planted.", "Proverb"], ["📖 Quote", "Fortune favors the bold.", "Latin proverb"], ["📖 Quote", "A smooth sea never made a skilled sailor.", "Proverb"], ["📖 Quote", "Where there's a will, there's a way.", "Proverb"], ["📖 Quote", "The best way out is always through.", "Robert Frost"], ["📖 Quote", "Hope is the thing with feathers that perches in the soul.", "Emily Dickinson"], ["📖 Quote", "Make each day your masterpiece.", "John Wooden"], ["📖 Quote", "Courage is grace under pressure.", "Ernest Hemingway"], ["📖 Quote", "No rain, no flowers.", "Proverb"], ["📖 Quote", "Health is wealth.", "Proverb"], ["📖 Quote", "Drop by drop, the bucket fills.", "Proverb"], ["📖 Quote", "Patience is bitter, but its fruit is sweet.", "Proverb"]];
+
+// ============================================================
+// Small helpers
+// ============================================================
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const todayD = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+const wd = d => (d.getDay() + 6) % 7;
+const diffDays = (a, b) => Math.round((parse(iso(a)) - parse(iso(b))) / 86400000);
+const fmtL = ml => (Math.round(ml / 10) / 100).toString();
+const pct = r => `${Math.round(r * 100)}%`;
+function textOn(hex) { const h = hex.replace("#", ""); const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 170 ? "#5b2a4e" : "#ffffff"; }
+function seeded(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (const ch of s) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return h >>> 0; }
+const niceDay = (d, today) => { const n = diffDays(d, today); if (n === 0) return "Today"; if (n === 1) return "Tomorrow";
+  if (n === -1) return "Yesterday"; let l = `${WEEKDAYS[wd(d)]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  if (n > 1 && n <= 6) l += ` · in ${n} days`; return l; };
+
+// ============================================================
+// Data (stored on this phone)
+// ============================================================
+let S = null;
+const ui = { page: "garden", weekOffset: 0, range: "30", hidden: new Set(), animate: true, barPrev: null, waterPrev: null };
+
+function emptyState() {
+  return { version: 1, habits: [], entries: {}, water: {}, pauses: {}, todos: [], pins: [],
+           settings: { waterGoal: 2000, theme: "auto", lastBackup: null, created: iso(todayD()) }, nextId: 1 };
+}
+function normalize(s) {
+  const e = emptyState();
+  const out = Object.assign(e, s);
+  out.settings = Object.assign(emptyState().settings, s.settings || {});
+  out.habits = (out.habits || []).map(h => Object.assign({ kind: "binary", unit: "", target: 1, color: "#ec4899", archived: 0,
+    emoji: "🌸", category: "Other", days: "0123456", position: h.id }, h));
+  out.habits.forEach(h => { if (!CAT[h.category]) h.category = "Other"; if (!h.days) h.days = "0123456"; });
+  const maxId = Math.max(0, ...out.habits.map(h => h.id), ...out.todos.map(t => t.id), ...out.pins.map(p => p.id));
+  out.nextId = Math.max(out.nextId || 1, maxId + 1);
+  return out;
+}
+function load() { try { const raw = localStorage.getItem(KEY); return raw ? normalize(JSON.parse(raw)) : null; } catch (e) { return null; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("⚠️ Could not save, storage full?"); } }
+const newId = () => S.nextId++;
+
+const paused = d => !!S.pauses[iso(d)];
+const isOn = (h, d) => !paused(d) && h.days.includes(String(wd(d)));
+const val = (h, d) => S.entries[`${h.id}|${iso(d)}`] || 0;
+const isDone = (h, d) => val(h, d) >= h.target;
+const activeHabits = () => S.habits.filter(h => !h.archived).sort((a, b) =>
+  catIndex(a.category) - catIndex(b.category) || (a.position ?? a.id) - (b.position ?? b.id) || a.id - b.id);
+const catIndex = c => CATEGORIES.findIndex(x => x[0] === c);
+function setVal(h, d, v) { const k = `${h.id}|${iso(d)}`; if (!v || v <= 0) delete S.entries[k]; else S.entries[k] = v; save(); }
+function doneDays(h) { const set = new Set(); const pre = `${h.id}|`;
+  for (const [k, v] of Object.entries(S.entries)) if (k.startsWith(pre) && v >= h.target) set.add(k.slice(pre.length)); return set; }
+function habitStart(h) { let s = h.created; const pre = `${h.id}|`;
+  for (const k of Object.keys(S.entries)) if (k.startsWith(pre)) { const d = k.slice(pre.length); if (d < s) s = d; } return parse(s); }
+function currentStreak(days, today, h) { let d = days.has(iso(today)) ? today : addDays(today, -1), n = 0;
+  for (let i = 0; i < 4000; i++) { if (days.has(iso(d))) n++; else if (!h || isOn(h, d)) break; d = addDays(d, -1); } return n; }
+function longestStreak(days, h) { const list = [...days].sort(); let best = 0, run = 0, prev = null;
+  for (const s of list) { const d = parse(s);
+    if (!prev) run = 1; else { let ok = true; for (let x = addDays(prev, 1); x < d; x = addDays(x, 1)) if (!h || isOn(h, x)) { ok = false; break; } run = ok ? run + 1 : 1; }
+    best = Math.max(best, run); prev = d; } return best; }
+function categoryStatus(habits, day) { const st = {};
+  for (const [cat] of CATEGORIES) { const sub = habits.filter(h => h.category === cat && isOn(h, day)); if (!sub.length) continue;
+    st[cat] = [sub.filter(h => isDone(h, day)).length, Math.min(RULE_MIN, sub.length)]; } return st; }
+const daysLabel = days => days === "0123456" ? "" : days === "01234" ? "Weekdays" : days === "56" ? "Weekends" : [...days].map(c => WEEKDAYS[+c]).join(" · ");
+
+// ============================================================
+// Feedback: toast, balloons, lazy party
+// ============================================================
+let toastTimer;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2800); }
+function balloons() { const items = ["🎈", "🎈", "💖", "🎈", "🌸", "🎈", "✨", "🎈", "💗", "🎈", "🎀", "🎈"];
+  items.forEach((b, i) => { const el = document.createElement("div"); el.className = "balloon"; el.textContent = b;
+    el.style.left = `${5 + Math.random() * 88}%`; el.style.animationDelay = `${i * 0.12}s`; document.body.appendChild(el); setTimeout(() => el.remove(), 5200); }); }
+function lazyParty() { const things = ["🦥","☁️","💤","☁️","🌙","🦥","☁️","✨","💤","🛋️","☁️","🦥","🍿","☁️","💜","💤"];
+  const el = document.createElement("div"); el.className = "lazy-party";
+  el.innerHTML = things.map(t => `<span class="lp-float" style="top:${4 + Math.random() * 84}%;font-size:${1.6 + Math.random() * 2}rem;animation-delay:${(Math.random() * 1.6).toFixed(2)}s;animation-duration:${(3.2 + Math.random() * 1.8).toFixed(2)}s">${t}</span>`).join("")
+    + `<div class="lp-center"><div class="lp-sloth">🦥</div><div class="lp-text">Lazy mode ON</div><div class="lp-sub">shhh… the habits are sleeping too 💤</div></div>`;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 5400); }
+
+// ============================================================
+// Theme
+// ============================================================
+function applyTheme() { const t = S ? S.settings.theme : "auto"; const h = new Date().getHours();
+  const dark = t === "dark" || (t === "auto" && (h >= 19 || h < 7));
+  document.body.classList.toggle("dark", dark);
+  document.body.classList.toggle("lazy", !!S && paused(todayD()));
+  document.querySelector('meta[name="theme-color"]').content = dark ? "#1c1027" : "#fde7f3"; }
+
+// ============================================================
+// Page: Garden
+// ============================================================
+function ringSvg(rate, color, size = 80, r = 32) { const c = 2 * Math.PI * r, mid = size / 2;
+  return `<svg class="ring" viewBox="0 0 ${size} ${size}"><circle cx="${mid}" cy="${mid}" r="${r}" class="ring-bg"/>
+    <circle cx="${mid}" cy="${mid}" r="${r}" class="ring-fg" transform="rotate(-90 ${mid} ${mid})" style="stroke:${color};stroke-dasharray:${c.toFixed(1)};stroke-dashoffset:${(c * (1 - rate)).toFixed(1)}"/>
+    <text x="${mid}" y="${mid + 6}" text-anchor="middle" class="ring-txt">${pct(rate)}</text></svg>`; }
+
+function lazyTop(today) {
+  if (paused(today)) {
+    let last = today; while (paused(addDays(last, 1))) last = addDays(last, 1);
+    return `<div class="lazy-banner pop"><span class="lazy-emoji">🦥</span><div><div class="lazy-title">Lazy day activated</div>
+      <div class="lazy-msg">No pressure today. Blanket, snacks and your comfort show are officially on the schedule.</div></div>
+      <span class="zzz z1">z</span><span class="zzz z2">z</span><span class="zzz z3">Z</span></div>
+      <button class="back-btn" data-act="back">✨ I'm back!</button>`;
+  }
+  return `<div class="row" style="justify-content:flex-end;margin-bottom:12px"><button class="lazy-btn" data-act="lazy">🦥 Lazy day today?</button></div>`;
+}
+function garden(habits, today) {
+  const st = categoryStatus(habits, today); const cats = Object.keys(st); if (!cats.length) return "";
+  let blooming = 0; const c = 2 * Math.PI * 28;
+  const beds = cats.map(cat => { const [got, need] = st[cat]; const done = got >= need; blooming += done; const rate = Math.min(got / need, 1);
+    const stage = done ? "🌸" : got ? "🌷" : "🌱";
+    return `<div class="bloom${done ? " done" : ""}"><div class="bloom-ring"><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="28" class="bring-bg"/>
+      <circle cx="36" cy="36" r="28" class="bring-fg" transform="rotate(-90 36 36)" style="stroke:${CAT[cat].color};stroke-dasharray:${c.toFixed(1)};stroke-dashoffset:${(c * (1 - rate)).toFixed(1)}"/></svg>
+      <span class="bloom-icon">${CAT[cat].icon}</span><span class="bloom-stage">${stage}</span>
+      ${done ? '<span class="spark s1">✨</span><span class="spark s2">✨</span><span class="spark s3">💖</span>' : ""}</div>
+      <div class="bloom-name">${CAT[cat].short}</div><div class="bloom-count">${got}/${need}${done ? " ✓" : ""}</div></div>`; }).join("");
+  const perfect = blooming === cats.length;
+  return `<div class="card garden pop${perfect ? " perfect" : ""}"><div class="garden-head"><div class="box-title">🌷 Today's garden</div>
+    <div class="soft">${blooming} of ${cats.length} categories blooming</div></div><div class="beds">${beds}</div>
+    ${perfect ? '<div class="perfect-msg">🌸 Perfect day! Every category is in full bloom 👑</div>' : ""}</div>`;
+}
+function waterCard(today) {
+  const goal = S.settings.waterGoal, ml = S.water[iso(today)] || 0, left = goal - ml;
+  const path = '<path d="M0 10 Q 25 0 50 10 T 100 10 T 150 10 T 200 10 V 20 H 0 Z"/>';
+  const hint = left <= 0 ? "Hydrated queen! 💧👑" : `${fmtL(left)} L to go · about ${Math.ceil(left / 250)} glasses 🥤`;
+  return `<div class="card pop"><div class="box-title">💧 Water today</div><div class="water">
+    <div class="glass"><div class="liquid" id="liquid" data-to="${Math.min(ml / goal, 1) * 100}">
+      <svg class="wave" viewBox="0 0 200 20" preserveAspectRatio="none">${path}</svg><svg class="wave w2" viewBox="0 0 200 20" preserveAspectRatio="none">${path}</svg>
+      <span class="bubble b1"></span><span class="bubble b2"></span><span class="bubble b3"></span></div></div>
+    <div class="water-info"><b>${fmtL(ml)} L</b><small>of ${fmtL(goal)} L</small><div class="hint">${hint}</div></div></div>
+    <div class="water-btns"><button class="btn soft" data-act="water" data-ml="250">+250 ml</button><button class="btn soft" data-act="water" data-ml="500">+500 ml</button>
+    <button class="btn soft" data-act="water" data-ml="-250">−250 ml</button></div></div>`;
+}
+function pills(list) { return list.map(([h, extra]) => `<span class="rpill" style="border-left:4px solid ${h.color}">${h.emoji} ${esc(h.name)}${extra || ""}</span>`).join(""); }
+function reminders(habits, today) {
+  const now = new Date(), y = addDays(today, -1), items = [];
+  const doneToday = new Set(habits.filter(h => isDone(h, today)).map(h => h.id));
+  // own: to-dos, plan tomorrow, backup
+  if (now.getHours() >= 18 && !S.todos.some(t => t.kind === "day" && t.day === iso(addDays(today, 1))))
+    items.push(["🌙", "Plan tomorrow", "Write tomorrow's to-dos tonight (Planner) ✨", ""]);
+  const open = S.todos.filter(t => t.kind === "day" && t.day === iso(today) && !t.done);
+  if (open.length) items.push(["📝", `${open.length} to-do${open.length !== 1 ? "s" : ""} open`, open.slice(0, 3).map(t => esc(t.text)).join(", ") + (open.length > 3 ? ` +${open.length - 3}` : ""), ""]);
+  const lb = S.settings.lastBackup; const since = lb ? diffDays(today, parse(lb)) : diffDays(today, parse(S.settings.created));
+  if (since >= 7) items.push(["💾", "Backup time", "Save a copy of your data: menu ☰ → Save backup", ""]);
+  if (paused(today)) { items.push(["💤", "Habit reminders are napping", "It's your lazy day. No pressure at all today 🫶", ""]); return renderNotes(items); }
+  const missed = habits.filter(h => habitStart(h) <= y && !doneToday.has(h.id) && isOn(h, y) && isOn(h, today) && !isDone(h, y)).map(h => [h, ""]);
+  if (missed.length) items.push(["🚨", "Missed yesterday, do it today", "Never miss twice, bestie!", pills(missed)]);
+  const missedIds = new Set(missed.map(m => m[0].id)), danger = [];
+  for (const h of habits) { if (doneToday.has(h.id) || missedIds.has(h.id) || !isOn(h, today)) continue;
+    const s = currentStreak(doneDays(h), today, h); if (s >= 3) danger.push([h, ` · ${s} days`]); }
+  if (danger.length) items.push(["🔥", "Keep your streaks alive", "Don't let them break today", pills(danger)]);
+  const goal = S.settings.waterGoal, ml = S.water[iso(today)] || 0, hr = now.getHours();
+  if (hr >= 9 && hr < 23 && ml < goal) { const exp = goal * Math.min(1, (hr - 8) / 13);
+    if (ml < exp - 250) items.push(["💧", "Water check", `By now about ${fmtL(exp)} L would be great, you're at ${fmtL(ml)} L. Grab a glass!`, ""]); }
+  const openH = habits.filter(h => !doneToday.has(h.id) && isOn(h, today));
+  if (hr < 12) { const m = openH.filter(h => h.category === "Morning routine").map(h => [h, ""]); if (m.length) items.push(["☀️", "Morning routine", "Start your day strong", pills(m)]); }
+  else if (hr >= 18 && openH.length) { const n = openH.filter(h => h.category === "Night routine").map(h => [h, ""]);
+    items.push(["🌙", `${openH.length} habit${openH.length !== 1 ? "s" : ""} still open tonight`, n.length ? "Your night routine is waiting:" : "There's still time!", pills(n)]); }
+  const short = Object.entries(categoryStatus(habits, today)).filter(([, [g, n]]) => g < n).map(([c, [g, n]]) => `${CAT[c].icon} ${n - g} more`);
+  if (short.length && hr >= 15) items.push(["🌷", "Garden check", short.join(" · "), ""]);
+  return renderNotes(items);
+}
+function renderNotes(items) {
+  const empty = !items.length;
+  if (empty) items = [["🎀", "All clear!", "Nothing to remind you of right now. You're doing amazing, bestie 💅", ""]];
+  return `<div class="card rem pop"><div class="box-title"><span class="bell${empty ? "" : " ringing"}">${empty ? "🔕" : "🔔"}</span>Reminders for today
+    <span class="rem-count${empty ? " calm" : ""}">${empty ? "all done" : `${items.length} note${items.length !== 1 ? "s" : ""}`}</span></div>
+    <div class="board">${items.map(([i, t, s, x], k) => `<div class="note n${k % 5}" style="animation-delay:${k * 90}ms"><div class="note-head"><span>${i}</span>${t}</div>
+    <div class="note-sub">${s}</div>${x ? `<div>${x}</div>` : ""}</div>`).join("")}</div></div>`;
+}
+function memeCard(done, total, today) {
+  const r = total ? done / total : 0; const lvl = done === 0 ? 0 : done === total ? 4 : r < .34 ? 1 : r < .67 ? 2 : 3;
+  const opts = MEMES[lvl]; const [e, top, bot] = opts[hashStr(`${iso(today)}-${lvl}`) % opts.length];
+  return `<div class="meme pop"><span class="meme-emoji">${e}</span><div><div class="meme-top">${esc(top)}</div><div class="meme-bottom">${esc(bot)}</div></div></div>`;
+}
+function weekGrid(habits, today) {
+  const monday = addDays(today, -wd(today) + ui.weekOffset * 7); const days = [...Array(7)].map((_, i) => addDays(monday, i));
+  const st = categoryStatus(habits, today); let possible = 0, doneTotal = 0;
+  let html = `<div class="week-nav"><button class="btn" data-act="week" data-n="-1">◀</button>
+    <div class="label">${MONTHS[days[0].getMonth()]} ${days[0].getDate()} – ${MONTHS[days[6].getMonth()]} ${days[6].getDate()}</div>
+    <button class="btn" data-act="week" data-n="1" ${ui.weekOffset >= 0 ? "disabled style='opacity:.4'" : ""}>▶</button>
+    <button class="btn" data-act="week" data-n="0" ${ui.weekOffset === 0 ? "disabled style='opacity:.4'" : ""}>Today</button></div>
+    <div class="grid"><div class="h-name">Habit</div>`;
+  html += days.map(d => `<div class="day-head${iso(d) === iso(today) ? " today" : wd(d) >= 5 ? " weekend" : ""}">${WEEKDAYS[wd(d)]}<b>${d.getDate()}</b></div>`).join("");
+  html += `<div class="streak-h">Streak</div>`;
+  for (const [cat, icon] of CATEGORIES) {
+    const sub = habits.filter(h => h.category === cat); if (!sub.length) continue;
+    const badge = st[cat] ? `<small class="${st[cat][0] >= st[cat][1] ? "ok" : ""}">today ${st[cat][0]}/${st[cat][1]}</small>` : "<small>rest day today 😴</small>";
+    html += `<div class="cat-head">${icon} ${cat}${badge}</div>`;
+    for (const h of sub) {
+      const tag = daysLabel(h.days);
+      html += `<div class="habit-pill" style="background:${h.color}33;border-color:${h.color}">${h.emoji} ${esc(h.name)}${tag ? `<span class="days-tag">${tag}</span>` : ""}</div>`;
+      let weekDone = 0, weekTarget = 0;
+      for (const d of days) {
+        const v = val(h, d), done = v >= h.target, future = d > today, planned = isOn(h, d);
+        if (planned) { weekTarget++; if (done) weekDone++; }
+        if (!future && planned) { possible++; if (done) doneTotal++; }
+        const cls = done ? "on" : planned ? "off" : "rest";
+        const label = done ? (h.kind === "amount" ? `<span style="font-size:.75rem">${v}</span>` : "♥") : h.kind === "amount" && v ? v : planned ? "♡" : "·";
+        html += `<button class="cell ${cls}${future ? " future" : ""}${h.kind === "amount" && v ? " num" : ""}" data-act="cell" data-h="${h.id}" data-d="${iso(d)}"
+          style="--c:${h.color};--t:${textOn(h.color)}" aria-label="${esc(h.name)} ${iso(d)}">${label}</button>`;
+      }
+      html += `<div class="streak">🔥 ${currentStreak(doneDays(h), today, h)}<small>${weekDone}/${weekTarget}</small></div>`;
+    }
+  }
+  html += `</div>`;
+  if (possible) { const r = doneTotal / possible; const msg = r >= .8 ? "You're on fire, queen! 👑" : r >= .5 ? "Going really well! ✨" : "Every day is a fresh start 🌷";
+    html += `<div style="margin-top:16px" class="soft">💖 ${pct(r)} of this week done · ${msg}</div><div class="progress"><div style="width:${r * 100}%"></div></div>`; }
+  return html;
+}
+function todayBar(habits, today) {
+  const planned = habits.filter(h => isOn(h, today)); const done = planned.filter(h => isDone(h, today)).length, total = planned.length;
+  const rate = total ? done / total : 0; const icon = total === 0 ? "💤" : rate >= 1 ? "👑" : "💖";
+  return `<div class="tbar"><div class="tbar-track"><div class="tbar-fill${rate >= 1 ? " full" : ""}" id="tbarFill" data-to="${rate * 100}"><span class="tbar-heart">${icon}</span></div></div>
+    <div class="tbar-count">${total ? `${done}/${total}` : "zzz"}</div></div>`;
+}
+function pageGarden() {
+  const today = todayD(), habits = activeHabits();
+  if (!habits.length) return `<h1>🌷 Daily Habit Garden</h1><div class="card">No habits yet. Add your first one under <b>🎀 Habits</b>. 💕</div>`;
+  const planned = habits.filter(h => isOn(h, today)), done = planned.filter(h => isDone(h, today)).length;
+  return `<h1>🌷 Daily Habit Garden</h1>${lazyTop(today)}${paused(today) ? "" : garden(habits, today)}
+    <div class="two">${waterCard(today)}${reminders(habits, today)}</div>${paused(today) ? "" : memeCard(done, planned.length, today)}
+    ${weekGrid(habits, today)}${todayBar(habits, today)}`;
+}
+
+// ============================================================
+// Page: Planner
+// ============================================================
+function taskList(kind, day, empty) {
+  const list = S.todos.filter(t => t.kind === kind && t.day === iso(day)).sort((a, b) => a.done - b.done || a.id - b.id);
+  return (list.length ? list.map(t => `<div class="task${t.done ? " done" : ""}"><button class="check" data-act="todo-toggle" data-id="${t.id}" aria-label="done">${t.done ? "✓" : ""}</button>
+      <span class="txt">${esc(t.text)}</span><button class="del" data-act="todo-del" data-id="${t.id}" aria-label="delete">✕</button></div>`).join("")
+    : `<div class="soft" style="margin:6px 0">${empty}</div>`)
+    + `<form class="add-row" data-form="todo" data-kind="${kind}" data-day="${iso(day)}"><input type="text" name="text" placeholder="Add something…" autocomplete="off"><button class="btn" type="submit">＋</button></form>`;
+}
+function pagePlanner() {
+  const today = todayD(), tomorrow = addDays(today, 1);
+  const pins = [...S.pins].sort((a, b) => (a.day || "9999") .localeCompare(b.day || "9999") || a.id - b.id);
+  const soonN = pins.filter(p => p.day && diffDays(parse(p.day), today) >= 0 && diffDays(parse(p.day), today) <= 1).length;
+  let html = `<h1>📝 Daily Planner</h1><div class="corkboard pop"><div class="row"><span class="board-title">📌 My pinboard</span>
+    ${soonN ? `<span class="rem-count" style="margin-left:6px">${soonN} coming up</span>` : ""}</div>
+    <details class="new-note"><summary>➕ Pin a new note</summary><form data-form="pin">
+      <label class="lbl">Note</label><input type="text" name="text" placeholder="e.g. Doctor appointment, Mom's birthday 🎂" required>
+      <div class="row"><div style="flex:1.2"><label class="lbl">Date (optional)</label><input type="date" name="day" value="${iso(today)}"></div>
+      <div style="flex:1"><label class="lbl">Time (optional)</label><input type="time" name="time"></div></div>
+      <label class="lbl">Color</label><select name="color">${PIN_COLORS.map((c, i) => `<option value="${i}">${c}</option>`).join("")}</select>
+      <div style="margin-top:12px"><button class="btn primary" type="submit">📌 Pin it</button></div></form></details>`;
+  html += pins.length ? `<div class="pins">${pins.map(p => { const d = p.day ? parse(p.day) : null; const n = d ? diffDays(d, today) : null;
+      const soon = d && n >= 0 && n <= 1, past = d && n < 0;
+      return `<div><div class="pin-note n${p.color % 5}${soon ? " soon" : ""}${past ? " past" : ""}"><span class="pin-head">📍</span><div class="pin-text">${esc(p.text)}</div>
+        ${d ? `<div class="pin-when${soon ? " soon" : ""}">📅 ${niceDay(d, today)}${p.time ? " · " + esc(p.time) : ""}</div>` : ""}</div>
+        <button class="pin-done" data-act="pin-del" data-id="${p.id}">✓ Done</button></div>`; }).join("")}</div>`
+    : `<div class="board-empty">Nothing pinned yet. Appointments, ideas, little love notes… pin them here 💌</div>`;
+  html += `</div>`;
+  // today
+  const todays = S.todos.filter(t => t.kind === "day" && t.day === iso(today)); const n = todays.length, done = todays.filter(t => t.done).length;
+  const msg = n === 0 ? "Fresh page, fresh start ✨" : done === n ? "All done! You absolute legend 🎉" : `${done} of ${n} done · keep going 💪`;
+  const oldOpen = S.todos.filter(t => t.kind === "day" && !t.done && t.day < iso(today)).length;
+  const stillOpen = n - done;
+  html += `<div class="pbox todo pop"><div class="box-title">✅ To-do list</div><div class="day-date">${WEEKDAYS[wd(today)]}, ${MONTHS[today.getMonth()]} ${today.getDate()}</div>
+    <div class="progress" style="background:#ffffffb0"><div style="width:${n ? done / n * 100 : 0}%"></div></div><div class="todo-meta">${msg}</div>
+    ${taskList("day", today, "Nothing planned yet. Add your first task below ✨")}
+    ${oldOpen ? `<button class="btn small" style="margin-top:10px" data-act="carry">📦 Move ${oldOpen} unfinished task${oldOpen !== 1 ? "s" : ""} from earlier to today</button>` : ""}
+    ${stillOpen && new Date().getHours() >= 17 ? `<button class="btn small" style="margin-top:10px" data-act="to-tomorrow">➡️ Move ${stillOpen} unfinished task${stillOpen !== 1 ? "s" : ""} to tomorrow</button>` : ""}</div>`;
+  // tomorrow
+  const nt = S.todos.filter(t => t.kind === "day" && t.day === iso(tomorrow)).length;
+  html += `<div class="pbox tomorrow pop"><span class="star s1">✦</span><span class="star s2">✧</span><span class="star s3">✦</span>
+    <div class="box-title">🌙 Tomorrow</div><div class="day-date">${WEEKDAYS[wd(tomorrow)]}, ${MONTHS[tomorrow.getMonth()]} ${tomorrow.getDate()}</div>
+    <div class="todo-meta">${nt ? `${nt} task${nt !== 1 ? "s" : ""} ready · future you says thank you 💜` : "Plan tonight, glide through tomorrow ✨"}</div>
+    ${taskList("day", tomorrow, "Nothing planned for tomorrow yet. What do you want to get done?")}</div>`;
+  // weekend
+  const w = wd(today); const sat = w < 5 ? addDays(today, 5 - w) : addDays(today, -(w - 5)); const left = diffDays(sat, today);
+  const count = w >= 5 ? "It's the weekend! Enjoy every second 🎉" : left === 1 ? "Tomorrow is the weekend! 🥳" : `${left} more days until the weekend ✨`;
+  const dots = w < 5 ? [...Array(5)].map((_, i) => `<span class="wdot${i < 5 - left ? " on" : ""}"></span>`).join("") : "";
+  html += `<div class="pbox weekend pop"><div class="box-title">🌴 Weekend corner</div><div class="weekend-count">${count}</div><div class="wdots">${dots}</div>
+    ${taskList("weekend", sat, "Brunch? Movie night? Spa day? Plan something nice 💅")}</div>`;
+  return html;
+}
+
+// ============================================================
+// Page: Overview
+// ============================================================
+function pearlChain(start, today, state) {
+  const n = diffDays(today, start) + 1; const size = n <= 35 ? 26 : n <= 100 ? 17 : 11; let out = "";
+  for (let i = 0, d = start; d <= today; i++, d = addDays(d, 1)) {
+    if (i === 0 || d.getDate() === 1) out += `<span class="mlabel">${MONTHS[d.getMonth()]}</span>`;
+    let [cls, tip, inner] = state(d); if (iso(d) === iso(today)) cls += " today";
+    out += `<span class="${cls}" title="${tip}">${size > 11 ? inner : ""}</span>`;
+  }
+  return `<div class="pearls" style="--s:${size}px">${out}</div>`;
+}
+function hcard(h, emoji, name, rate, color, stats, chain) {
+  return `<div class="hcard pop" style="--c:${color};--cl:${color}30;--cl2:${color}55;--t:${textOn(color)}"><div class="hhead"><span class="hemoji">${emoji}</span>${name}</div>
+    <div class="hbody">${ringSvg(rate, color)}<div class="hstats">${stats.map(([b, s]) => `<div class="hstat"><b>${b}</b><small>${s}</small></div>`).join("")}</div></div>${chain}</div>`;
+}
+function pageOverview() {
+  const today = todayD(), all = activeHabits();
+  if (!all.length) return `<h1>📊 Overview</h1><div class="card">No habits yet.</div>`;
+  const ranges = [["7", "7 days"], ["30", "30 days"], ["90", "90 days"], ["365", "1 year"], ["all", "All time"]];
+  let html = `<h1>📊 Overview</h1><div class="chips">${ranges.map(([k, l]) => `<button class="chip${ui.range === k ? " on" : ""}" data-act="range" data-r="${k}">${l}</button>`).join("")}</div>
+    <div class="chips" style="margin-top:8px">${all.map(h => `<button class="chip${ui.hidden.has(h.id) ? "" : " on"}" data-act="filter" data-id="${h.id}">${h.emoji} ${esc(h.name)}</button>`).join("")}</div>`;
+  const habits = all.filter(h => !ui.hidden.has(h.id)); if (!habits.length) return html;
+  const first = habits.map(habitStart).reduce((a, b) => a < b ? a : b);
+  const start = ui.range === "all" ? first : addDays(today, -(+ui.range - 1));
+  const stats = [], sections = {};
+  for (const h of habits) {
+    const days = doneDays(h); const hs = habitStart(h) > start ? habitStart(h) : start;
+    let total = 0, doneIn = 0; for (let d = hs; d <= today; d = addDays(d, 1)) if (isOn(h, d)) { total++; if (days.has(iso(d))) doneIn++; }
+    const rate = total ? doneIn / total : 0, cur = currentStreak(days, today, h); stats.push([h, rate, cur, doneIn, total]);
+    const state = d => { const v = val(h, d); if (v >= h.target) return ["p on", `${iso(d)}: done 💖`, "♥"];
+      if (paused(d)) return ["p rest", `${iso(d)}: lazy day 🦥`, ""]; if (!isOn(h, d)) return ["p rest", `${iso(d)}: rest day`, ""];
+      if (v) return ["p part", `${iso(d)}: ${v} of ${h.target} ${esc(h.unit)}`, ""]; return ["p", `${iso(d)}: not done`, ""]; };
+    (sections[h.category] ||= []).push(hcard(h, h.emoji, esc(h.name), rate, h.color,
+      [[`🔥 ${cur}`, "current streak"], [`🏅 ${longestStreak(days, h)}`, "longest streak"], [`${doneIn}/${total}`, "days done"]], pearlChain(hs, today, state)));
+  }
+  const allDone = stats.reduce((a, s) => a + s[3], 0), allTotal = stats.reduce((a, s) => a + s[4], 0);
+  const best = stats.reduce((a, b) => b[2] > a[2] ? b : a);
+  html += `<div class="summary pop"><span>💖 Overall <b>${pct(allTotal ? allDone / allTotal : 0)}</b> done</span>
+    <span>🔥 Best streak: <b>${best[0].emoji} ${esc(best[0].name)}</b> (${best[2]} days)</span><span>✨ <b>${allDone}</b> check marks</span></div>`;
+  for (const [cat, icon] of CATEGORIES) if (sections[cat]) html += `<div class="sec">${icon} ${cat}</div><div class="hgrid">${sections[cat].join("")}</div>`;
+  const wkeys = Object.keys(S.water).sort();
+  if (wkeys.length) { const goal = S.settings.waterGoal; const ws = parse(wkeys[0]) > start ? parse(wkeys[0]) : start;
+    let total = 0, hit = 0, sum = 0; for (let d = ws; d <= today; d = addDays(d, 1)) { total++; const ml = S.water[iso(d)] || 0; sum += ml; if (ml >= goal) hit++; }
+    let streak = 0, d = (S.water[iso(today)] || 0) >= goal ? today : addDays(today, -1); while ((S.water[iso(d)] || 0) >= goal) { streak++; d = addDays(d, -1); }
+    const state = d => { const ml = S.water[iso(d)] || 0; return ml >= goal ? ["p on", `${iso(d)}: ${fmtL(ml)} L 💧`, "💧"] : ml ? ["p part", `${iso(d)}: ${fmtL(ml)} L`, ""] : ["p", `${iso(d)}: no water logged`, ""]; };
+    html += `<div class="sec">💧 Water</div><div class="hgrid">${hcard(null, "💧", `Water (${fmtL(goal)} L a day)`, total ? hit / total : 0, "#93c5fd",
+      [[`🔥 ${streak}`, "days in a row"], [`${fmtL(total ? sum / total : 0)} L`, "average a day"], [`${hit}/${total}`, "goal reached"]], pearlChain(ws, today, state))}</div>`; }
+  html += `<div class="legend"><span><span class="p on">♥</span> done</span><span><span class="p part"></span> partly</span><span><span class="p"></span> not done</span><span><span class="p rest"></span> rest day</span></div>`;
+  const medals = ["🥇", "🥈", "🥉"];
+  html += `<div class="card pop" style="margin-top:20px"><div class="sec" style="margin-top:0">🏆 Your habit ranking</div>${[...stats].sort((a, b) => b[1] - a[1]).map(([h, r], i) =>
+    `<div class="rrow" style="--c:${h.color};--cl2:${h.color}55"><span>${medals[i] || "🌷"}</span><span class="rname">${h.emoji} ${esc(h.name)}</span>
+     <div class="rtrack"><div class="rfill" style="width:${r * 100}%;animation-delay:${i * 120}ms"></div></div><span class="rpct">${pct(r)}</span></div>`).join("")}</div>`;
+  return html;
+}
+
+// ============================================================
+// Page: Manage habits
+// ============================================================
+function habitForm(h) {
+  const id = h ? h.id : "new"; const cur = h || { emoji: "🌸", name: "", category: "Morning routine", kind: "binary", target: 1, unit: "", color: "#ec4899", days: "0123456" };
+  const emojis = EMOJIS.includes(cur.emoji) ? EMOJIS : [cur.emoji, ...EMOJIS];
+  return `<form data-form="habit" data-id="${id}">
+    <div class="row"><div style="width:90px"><label class="lbl">Emoji</label><select name="emoji">${emojis.map(e => `<option${e === cur.emoji ? " selected" : ""}>${e}</option>`).join("")}</select></div>
+    <div style="flex:1"><label class="lbl">Name</label><input type="text" name="name" value="${esc(cur.name)}" placeholder="e.g. Yoga, Reading" required></div></div>
+    <label class="lbl">Category</label><select name="category">${CATEGORIES.map(([c, i]) => `<option value="${c}"${c === cur.category ? " selected" : ""}>${i} ${c}</option>`).join("")}</select>
+    ${h ? `<input type="hidden" name="kind" value="${cur.kind}">` : `<label class="lbl">Type</label><select name="kind"><option value="binary">Yes / No</option><option value="amount">Amount (e.g. minutes)</option></select>`}
+    <div class="row"><div style="flex:1"><label class="lbl">Daily goal (amount only)</label><input type="number" name="target" min="0.1" step="any" value="${cur.target}"></div>
+    <div style="flex:1"><label class="lbl">Unit (amount only)</label><input type="text" name="unit" value="${esc(cur.unit)}" placeholder="minutes"></div></div>
+    <label class="lbl">Color</label><div class="swatches">${PALETTE.map(([n, c], i) => `<input type="radio" name="color" id="c-${id}-${i}" value="${c}"${c === cur.color ? " checked" : ""}><label for="c-${id}-${i}" title="${n}" style="background:${c}"></label>`).join("")}</div>
+    <label class="lbl">Days</label><div class="daychips">${WEEKDAYS.map((d, i) => `<input type="checkbox" name="days" id="d-${id}-${i}" value="${i}"${cur.days.includes(String(i)) ? " checked" : ""}><label for="d-${id}-${i}">${d}</label>`).join("")}</div>
+    ${h ? `<label class="row" style="margin-top:10px;gap:8px"><input type="checkbox" name="archived"${h.archived ? " checked" : ""}> Archived (hidden, data is kept)</label>` : ""}
+    <div class="row" style="margin-top:14px"><button class="btn primary" type="submit">${h ? "💾 Save" : "💖 Add habit"}</button>
+    ${h ? `<span class="spacer"></span><button class="btn small danger" type="button" data-act="habit-del" data-id="${h.id}">🗑️ Delete</button>` : ""}</div></form>`;
+}
+function pageManage() {
+  const all = [...S.habits].sort((a, b) => catIndex(a.category) - catIndex(b.category) || (a.position ?? a.id) - (b.position ?? b.id));
+  let html = `<h1>🎀 Manage habits</h1><details class="card pop" ${all.length ? "" : "open"}><summary class="box-title">✨ New habit</summary>${habitForm(null)}</details>
+    <div class="sec">🌷 Your habits</div>`;
+  html += all.map(h => `<details class="mhabit"><summary>${CAT[h.category].icon} ${h.emoji} ${esc(h.name)}${daysLabel(h.days) ? ` <span class="days-tag">${daysLabel(h.days)}</span>` : ""}
+    ${h.archived ? '<span class="soft">(archived)</span>' : ""}<span class="arrow">⌄</span></summary>${habitForm(h)}</details>`).join("") || `<div class="soft">No habits yet.</div>`;
+  const act = activeHabits();
+  if (act.length) { html += `<div class="sec">↕️ Order of your habits</div>`;
+    for (const [cat, icon] of CATEGORIES) { const sub = act.filter(h => h.category === cat); if (!sub.length) continue;
+      html += `<div class="cat-head" style="margin-top:8px">${icon} ${cat}</div>` + sub.map((h, i) => `<div class="sortrow"><div class="habit-pill" style="background:${h.color}33;border-color:${h.color}">${h.emoji} ${esc(h.name)}</div>
+        <button class="btn" data-act="move" data-id="${h.id}" data-dir="-1" ${i === 0 ? "disabled style='opacity:.35'" : ""}>↑</button>
+        <button class="btn" data-act="move" data-id="${h.id}" data-dir="1" ${i === sub.length - 1 ? "disabled style='opacity:.35'" : ""}>↓</button></div>`).join(""); } }
+  html += `<div class="sec">💧 Water goal</div><div class="card"><form data-form="water-goal" class="row"><input type="number" name="liters" min="0.5" max="6" step="0.25" value="${S.settings.waterGoal / 1000}">
+    <span class="muted">liters</span><button class="btn primary" type="submit">💾 Save</button></form></div>
+    <div class="sec">💾 Backup</div><div class="card">${backupBlock()}</div>`;
+  return html;
+}
+function backupBlock() {
+  const lb = S.settings.lastBackup;
+  return `<div class="soft">📦 Your data lives on this phone. Save a backup now and then (e.g. to Google Drive, iCloud or send it to yourself).</div>
+    <div class="soft" style="margin-top:6px">Last backup: <b>${lb ? niceDay(parse(lb), todayD()) : "never"}</b></div>
+    <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn primary" data-act="backup">💾 Save backup</button>
+    <button class="btn soft" data-act="restore">📥 Restore backup</button></div>`;
+}
+
+// ============================================================
+// Drawer: affirmation, rules, look
+// ============================================================
+function drawer() {
+  const order = [...AFFIRMATIONS.keys()]; const rnd = seeded(2026); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  const dayNo = Math.floor(todayD().getTime() / 86400000 - todayD().getTimezoneOffset() / 1440);
+  const [kind, text, who] = AFFIRMATIONS[order[((dayNo % order.length) + order.length) % order.length]];
+  const t = S ? S.settings.theme : "auto";
+  return `<div class="brand" style="font-size:1.3rem;margin-bottom:14px">🌷 Glow Garden</div><div class="soft" style="margin-bottom:14px">Small steps, big glow-up ✨</div>
+    <div class="card aff"><div class="box-title">🌸 Affirmation of the day</div><span class="aff-kind">${kind}</span><div class="aff-text">${esc(text)}</div>${who ? `<div class="aff-who">— ${esc(who)}</div>` : ""}</div>
+    <div class="card"><div class="box-title">💎 Golden rules</div><div class="grule"><span>🌷</span>At least ${RULE_MIN} habits in every category, every day</div>
+    <div class="grule"><span>🔁</span>Never miss a habit 2 days in a row</div></div>
+    <div class="card"><div class="box-title">🎨 Look</div><div class="seg">${[["light", "☀️ Light"], ["dark", "🌙 Dark"], ["auto", "✨ Auto"]].map(([k, l]) =>
+      `<button class="${t === k ? "on" : ""}" data-act="theme" data-t="${k}">${l}</button>`).join("")}</div><div class="soft" style="margin-top:6px">Auto = dark from 7 pm to 7 am</div></div>
+    ${S ? `<div class="card"><div class="box-title">💾 Backup</div>${backupBlock()}</div>` : ""}`;
+}
+
+// ============================================================
+// Rendering
+// ============================================================
+function render() {
+  applyTheme();
+  const app = $("#app");
+  document.body.className = document.body.className.replace(/\bpage-\S+/g, "").trim();
+  if (!S) { app.innerHTML = welcome(); $("#drawer").innerHTML = drawer(); $("#tabs").style.display = "none"; return; }
+  $("#tabs").style.display = "";
+  document.body.classList.add(`page-${ui.page}`);
+  const pages = { garden: pageGarden, planner: pagePlanner, overview: pageOverview, manage: pageManage };
+  app.classList.toggle("anim", ui.animate);
+  app.innerHTML = pages[ui.page]();
+  $("#drawer").innerHTML = drawer();
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("active", b.dataset.page === ui.page));
+  ui.animate = false;
+  // smooth fills: start from the previous value, then grow to the new one
+  const fill = $("#tbarFill"), liq = $("#liquid");
+  if (fill) { fill.style.height = `${ui.barPrev ?? 0}%`; requestAnimationFrame(() => requestAnimationFrame(() => fill.style.height = `${fill.dataset.to}%`)); ui.barPrev = +fill.dataset.to; }
+  if (liq) { liq.style.height = `${ui.waterPrev ?? 0}%`; requestAnimationFrame(() => requestAnimationFrame(() => liq.style.height = `${liq.dataset.to}%`)); ui.waterPrev = +liq.dataset.to; }
+}
+function welcome() {
+  return `<div class="welcome pop"><div class="big">🌷</div><h1>Welcome to Glow Garden</h1><p class="muted">Your habits, water, to-dos and pinboard, right here on your phone.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:320px;margin:24px auto">
+    <button class="btn primary" data-act="restore">📥 Restore my backup</button><button class="btn soft" data-act="fresh">✨ Start fresh</button></div>
+    <p class="soft">Coming from the old app? Choose “Restore my backup” and pick your <b>glow-garden-backup.json</b> file.</p></div>`;
+}
+
+// ============================================================
+// Actions
+// ============================================================
+const actions = {
+  page: d => { ui.page = d.page; ui.animate = true; window.scrollTo(0, 0); render(); },
+  drawer: () => document.body.classList.toggle("drawer-open"),
+  theme: d => { S.settings.theme = d.t; save(); render(); },
+  week: d => { ui.weekOffset = +d.n === 0 ? 0 : ui.weekOffset + +d.n; render(); },
+  cell: d => { const h = S.habits.find(x => x.id === +d.h); const day = parse(d.d);
+    if (h.kind === "amount") return amountModal(h, day);
+    const before = allDoneToday(); setVal(h, day, isDone(h, day) ? 0 : 1); afterToggle(before); },
+  water: d => { const k = iso(todayD()); const goal = S.settings.waterGoal; const before = S.water[k] || 0;
+    S.water[k] = Math.max(0, before + +d.ml); if (!S.water[k]) delete S.water[k]; save();
+    if ((S.water[k] || 0) >= goal && before < goal) toast("2 liters done! Hydrated queen 💧👑"); render(); },
+  lazy: () => { S.pauses[iso(todayD())] = "lazy"; save(); lazyParty(); ui.animate = true; render(); },
+  back: () => { for (const k of Object.keys(S.pauses)) if (k >= iso(todayD())) delete S.pauses[k]; save(); balloons(); toast("Welcome back, queen! Let's glow ✨👑"); ui.animate = true; render(); },
+  range: d => { ui.range = d.r; ui.animate = true; render(); },
+  filter: d => { const id = +d.id; ui.hidden.has(id) ? ui.hidden.delete(id) : ui.hidden.add(id); render(); },
+  "todo-toggle": d => { const t = S.todos.find(x => x.id === +d.id); t.done = t.done ? 0 : 1; save(); render(); },
+  "todo-del": d => { S.todos = S.todos.filter(x => x.id !== +d.id); save(); render(); },
+  "pin-del": d => { S.pins = S.pins.filter(x => x.id !== +d.id); save(); render(); },
+  carry: () => { const t = iso(todayD()); S.todos.forEach(x => { if (x.kind === "day" && !x.done && x.day < t) x.day = t; }); save(); render(); },
+  "to-tomorrow": () => { const t = iso(todayD()), tm = iso(addDays(todayD(), 1)); S.todos.forEach(x => { if (x.kind === "day" && !x.done && x.day === t) x.day = tm; }); save(); toast("Moved to tomorrow 🌙"); render(); },
+  move: d => { const h = S.habits.find(x => x.id === +d.id); const sub = activeHabits().filter(x => x.category === h.category);
+    const i = sub.indexOf(h), j = i + +d.dir; if (j < 0 || j >= sub.length) return; [sub[i], sub[j]] = [sub[j], sub[i]];
+    sub.forEach((x, k) => x.position = k); save(); render(); },
+  "habit-del": d => { const h = S.habits.find(x => x.id === +d.id);
+    if (!confirm(`Delete "${h.name}" and all its check marks for good?`)) return;
+    S.habits = S.habits.filter(x => x.id !== h.id); for (const k of Object.keys(S.entries)) if (k.startsWith(`${h.id}|`)) delete S.entries[k]; save(); render(); },
+  backup: () => saveBackup(),
+  restore: () => $("#restoreFile").click(),
+  fresh: () => { S = emptyState(); save(); ui.page = "manage"; ui.animate = true; render(); },
+};
+function allDoneToday() { const t = todayD(); const p = activeHabits().filter(h => isOn(h, t)); return p.length > 0 && p.every(h => isDone(h, t)); }
+function afterToggle(before) { const now = allDoneToday(); render(); if (now && !before) { balloons(); toast("All habits done for today! 👑💖"); } }
+function amountModal(h, day) {
+  const bg = document.createElement("div"); bg.className = "modal-bg";
+  bg.innerHTML = `<div class="modal"><div class="box-title">${h.emoji} ${esc(h.name)}</div><div class="soft">${niceDay(day, todayD())} · goal ${h.target} ${esc(h.unit)}</div>
+    <div class="stepper"><button class="btn soft" data-step="-1">−</button><input type="number" id="amt" value="${val(h, day)}" min="0" step="any"><button class="btn soft" data-step="1">＋</button></div>
+    <div class="row"><button class="btn soft" data-close>Cancel</button><span class="spacer"></span><button class="btn primary" data-ok>💾 Save</button></div></div>`;
+  document.body.appendChild(bg);
+  bg.addEventListener("click", e => { const inp = bg.querySelector("#amt");
+    if (e.target === bg || e.target.closest("[data-close]")) return bg.remove();
+    const st = e.target.closest("[data-step]"); if (st) { inp.value = Math.max(0, (+inp.value || 0) + +st.dataset.step); return; }
+    if (e.target.closest("[data-ok]")) { const before = allDoneToday(); setVal(h, day, +inp.value || 0); bg.remove(); afterToggle(before); } });
+}
+
+// ---------- forms ----------
+document.addEventListener("submit", e => {
+  const f = e.target.closest("form[data-form]"); if (!f) return; e.preventDefault(); const fd = new FormData(f);
+  const type = f.dataset.form;
+  if (type === "todo") { const text = (fd.get("text") || "").trim(); if (!text) return;
+    S.todos.push({ id: newId(), kind: f.dataset.kind, day: f.dataset.day, text, done: 0 }); save(); render();
+    const again = document.querySelector(`form[data-form="todo"][data-kind="${f.dataset.kind}"][data-day="${f.dataset.day}"] input`); if (again) again.focus(); }
+  if (type === "pin") { const text = (fd.get("text") || "").trim(); if (!text) return;
+    S.pins.push({ id: newId(), text, day: fd.get("day") || null, time: fd.get("time") || "", color: +fd.get("color") || 0, created: iso(todayD()) }); save(); toast("📌 Pinned!"); render(); }
+  if (type === "water-goal") { S.settings.waterGoal = Math.round(+fd.get("liters") * 1000) || 2000; save(); toast("Saved 💧"); render(); }
+  if (type === "habit") { const name = (fd.get("name") || "").trim(); if (!name) return toast("Please enter a name");
+    const days = fd.getAll("days").sort().join("") || "0123456"; const kind = fd.get("kind") || "binary";
+    const data = { name, emoji: fd.get("emoji"), category: fd.get("category"), color: fd.get("color") || "#ec4899", days,
+      target: kind === "amount" ? (+fd.get("target") || 1) : 1, unit: kind === "amount" ? (fd.get("unit") || "").trim() : "" };
+    if (f.dataset.id === "new") { S.habits.push(Object.assign({ id: newId(), kind, created: iso(todayD()), archived: 0, position: 999 }, data)); toast(`${data.emoji} "${name}" added!`); }
+    else { const h = S.habits.find(x => x.id === +f.dataset.id); Object.assign(h, data, { archived: fd.get("archived") ? 1 : 0 }); toast("Saved 💾"); }
+    save(); render(); }
+});
+document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
+  if (el.closest("form") && el.type === "submit") return;
+  const fn = actions[el.dataset.act]; if (fn) { if (el.closest("#drawer") && el.dataset.act !== "theme") document.body.classList.remove("drawer-open"); fn(el.dataset, el); } });
+
+// ---------- backup ----------
+async function saveBackup() {
+  S.settings.lastBackup = iso(todayD()); save();
+  const name = `glow-garden-backup-${iso(todayD())}.json`;
+  const blob = new Blob([JSON.stringify(S, null, 1)], { type: "application/json" });
+  try { const file = new File([blob], name, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: "Glow Garden backup" }); toast("Backup saved 💾"); render(); return; }
+  } catch (err) { if (err && err.name === "AbortError") { render(); return; } }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast("Backup downloaded 💾"); render();
+}
+$("#restoreFile").addEventListener("change", async e => {
+  const file = e.target.files[0]; e.target.value = ""; if (!file) return;
+  try { const data = JSON.parse(await file.text());
+    if (!data || !Array.isArray(data.habits) || typeof data.entries !== "object") throw new Error("not a Glow Garden backup");
+    if (S && S.habits.length && !confirm("Replace the data on this phone with this backup?")) return;
+    S = normalize(data); save(); ui.page = "garden"; ui.animate = true; render(); balloons(); toast(`Welcome back! ${S.habits.length} habits restored 🌷`);
+  } catch (err) { toast("⚠️ That file is not a Glow Garden backup"); }
+});
+
+// ============================================================
+// Start
+// ============================================================
+S = load();
+render();
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { ui.barPrev = null; render(); } });
+setInterval(() => { if (document.visibilityState === "visible" && !document.querySelector("input:focus,select:focus")) render(); }, 5 * 60 * 1000);
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+</script>
+</body>
+</html>
